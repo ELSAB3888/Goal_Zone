@@ -96,8 +96,6 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   Divider(color: greenColor.withOpacity(0.3), height: 1, indent: 16, endIndent: 16),
                   _buildListTile('Booking History', greenColor),
-                  Divider(color: greenColor.withOpacity(0.3), height: 1, indent: 16, endIndent: 16),
-                  _buildListTile('Payment Methods', greenColor, subtitle: 'visa ending in 4242'),
                 ],
               ),
             ),
@@ -112,8 +110,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  _buildListTile('Stadium Favorite', greenColor),
-                  Divider(color: greenColor.withOpacity(0.3), height: 1, indent: 16, endIndent: 16),
                   _buildListTile(
                     'Setting', 
                     greenColor,
