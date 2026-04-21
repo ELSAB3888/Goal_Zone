@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'reset_password_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -164,7 +165,10 @@ class _OtpScreenState extends State<OtpScreen> {
               // Submit Button
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to New Password Screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: greenColor,

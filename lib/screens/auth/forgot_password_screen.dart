@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'otp_screen.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({Key? key}) : super(key: key);
@@ -69,7 +70,10 @@ class ForgotPasswordScreen extends StatelessWidget {
               // Submit Button
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to OTP Screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const OtpScreen()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: greenColor,

@@ -31,8 +31,12 @@ class SportsBookingApp extends StatelessWidget {
             locale: localeProvider.locale,
             theme: ThemeData(
               brightness: Brightness.dark,
-              scaffoldBackgroundColor: const Color(0xFF1E1E1E), // Dark background
-              primaryColor: const Color(0xFF4C8C18), // The green color from the image
+              scaffoldBackgroundColor: const Color(
+                0xFF1E1E1E,
+              ), // Dark background
+              primaryColor: const Color(
+                0xFF4C8C18,
+              ), // The green color from the image
               textTheme: const TextTheme(
                 displayLarge: TextStyle(
                   color: Color(0xFF4C8C18),
@@ -57,20 +61,24 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Setup simple fade animation
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationController);
 
     _animationController.forward();
 
@@ -109,7 +117,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
               ),
             ),
           ),
-          
+
           // The centered text
           Center(
             child: FadeTransition(
@@ -145,5 +153,3 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     );
   }
 }
-
-

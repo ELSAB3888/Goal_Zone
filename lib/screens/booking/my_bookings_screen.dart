@@ -33,8 +33,9 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                'https://images.unsplash.com/photo-1518605368461-1e1e1140728c?q=80&w=800&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop', // Better booking banner image
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
               ),
             ),
           ),
@@ -149,7 +150,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   image: const DecorationImage(
-                    image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=400&auto=format&fit=crop'),
+                    image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -291,7 +292,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               image: const DecorationImage(
-                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=400&auto=format&fit=crop'),
+                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
                 fit: BoxFit.cover,
               ),
             ),
@@ -366,7 +367,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(8),
               image: const DecorationImage(
-                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=400&auto=format&fit=crop'),
+                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
                 fit: BoxFit.cover,
               ),
             ),

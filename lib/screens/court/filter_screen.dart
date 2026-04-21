@@ -10,9 +10,21 @@ class FilterScreen extends StatefulWidget {
 class _FilterScreenState extends State<FilterScreen> {
   // Mock list of cities from the image
   final List<String> _cities = [
-    'cairo', 'gize', 'louxer', 'cairo', 'Gize',
-    'cairo', 'gize', 'louxer', 'cairo', 'Gize',
-    'cairo', 'gize', 'louxer', 'cairo', 'Gize',
+    'cairo',
+    'gize',
+    'louxer',
+    'cairo',
+    'Gize',
+    'cairo',
+    'gize',
+    'louxer',
+    'cairo',
+    'Gize',
+    'cairo',
+    'gize',
+    'louxer',
+    'cairo',
+    'Gize',
   ];
 
   @override
@@ -36,7 +48,7 @@ class _FilterScreenState extends State<FilterScreen> {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                'https://images.unsplash.com/photo-1518605368461-1e1e1140728c?q=80&w=800&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop',
                 fit: BoxFit.cover,
               ),
             ),
@@ -61,10 +73,7 @@ class _FilterScreenState extends State<FilterScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Which city do you live in ?',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 24),
 
@@ -75,7 +84,10 @@ class _FilterScreenState extends State<FilterScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF2C2C2C),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+                      border: Border.all(
+                        color: greenColor.withOpacity(0.5),
+                        width: 1,
+                      ),
                     ),
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -86,14 +98,23 @@ class _FilterScreenState extends State<FilterScreen> {
                           decoration: BoxDecoration(
                             color: const Color(0xFF1E1E1E),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+                            border: Border.all(
+                              color: greenColor.withOpacity(0.5),
+                              width: 1,
+                            ),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Row(
                             children: [
                               Icon(Icons.search, color: greenColor, size: 20),
                               const SizedBox(width: 12),
-                              const Text('Search city', style: TextStyle(color: Colors.white54, fontSize: 14)),
+                              const Text(
+                                'Search city',
+                                style: TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 14,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -105,11 +126,17 @@ class _FilterScreenState extends State<FilterScreen> {
                           runSpacing: 12.0,
                           children: _cities.map((city) {
                             return Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 10,
+                              ),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF1E1E1E),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+                                border: Border.all(
+                                  color: greenColor.withOpacity(0.5),
+                                  width: 1,
+                                ),
                               ),
                               child: Text(
                                 city,

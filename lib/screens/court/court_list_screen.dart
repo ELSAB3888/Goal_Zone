@@ -12,7 +12,46 @@ class CourtListScreen extends StatefulWidget {
 }
 
 class _CourtListScreenState extends State<CourtListScreen> {
-  final List<String> _categories = ['All', 'Football', 'Tennis', 'Basketball'];
+  final List<String> _categories = ['All', 'Football'];
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
+
+  // Dynamic stadium data - ONLY Football for now
+  final List<Map<String, dynamic>> _allStadiums = [
+    {
+      'name': 'Alahly Stadium',
+      'location': 'Nasr city, cairo',
+      'price': '350 EGP',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
+      'sport': 'Football',
+      'rating': 4.8,
+    },
+    {
+      'name': 'Zamalek Stadium',
+      'location': 'Mohandeseen, cairo',
+      'price': '320 EGP',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
+      'sport': 'Football',
+      'rating': 4.7,
+    },
+    {
+      'name': 'Pyramids Court',
+      'location': 'New Cairo, cairo',
+      'price': '400 EGP',
+      'imageUrl':
+          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
+      'sport': 'Football',
+      'rating': 4.9,
+    },
+  ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,11 +59,25 @@ class _CourtListScreenState extends State<CourtListScreen> {
     final darkBg = const Color(0xFF1E1E1E);
     final navProvider = Provider.of<NavigationProvider>(context);
 
+    // Filter logic
+    final List<Map<String, dynamic>> filteredStadiums = _allStadiums.where((
+      stadium,
+    ) {
+      final bool matchesSport =
+          navProvider.selectedSport == 'All' ||
+          stadium['sport'] == navProvider.selectedSport;
+      final bool matchesSearch =
+          stadium['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          stadium['location'].toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
+      return matchesSport && matchesSearch;
+    }).toList();
+
     return Scaffold(
       backgroundColor: darkBg,
       body: CustomScrollView(
         slivers: [
-          // 1. Header with Stadium Image and Back Button
           SliverAppBar(
             expandedHeight: 180.0,
             floating: false,
@@ -33,25 +86,24 @@ class _CourtListScreenState extends State<CourtListScreen> {
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: greenColor, size: 28),
               onPressed: () {
-                navProvider.setIndex(0); // Go back to Home tab
+                navProvider.setIndex(0);
               },
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                'https://images.unsplash.com/photo-1518605368461-1e1e1140728c?q=80&w=800&auto=format&fit=crop',
+                'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop', // Unified banner image
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(color: Colors.black),
               ),
             ),
           ),
-
-          // 2. Main Content
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
                   const Text(
                     'Play Ground',
                     style: TextStyle(
@@ -61,25 +113,40 @@ class _CourtListScreenState extends State<CourtListScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Search & Filter
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2C2C2C),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
-                          ),
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Row(
-                            children: [
-                              Icon(Icons.search, color: greenColor),
-                              const SizedBox(width: 12),
-                              const Text('Search courts...', style: TextStyle(color: Colors.white54)),
-                            ],
+                        child: TextField(
+                          controller: _searchController,
+                          onChanged: (value) {
+                            setState(() {
+                              _searchQuery = value;
+                            });
+                          },
+                          style: const TextStyle(color: Colors.white),
+                          decoration: InputDecoration(
+                            hintText: 'Search courts...',
+                            hintStyle: const TextStyle(color: Colors.white54),
+                            prefixIcon: Icon(Icons.search, color: greenColor),
+                            filled: true,
+                            fillColor: const Color(0xFF2C2C2C),
+                            contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: greenColor.withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide(
+                                color: greenColor,
+                                width: 1,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -88,7 +155,9 @@ class _CourtListScreenState extends State<CourtListScreen> {
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const FilterScreen()),
+                            MaterialPageRoute(
+                              builder: (context) => const FilterScreen(),
+                            ),
                           );
                         },
                         child: Container(
@@ -104,15 +173,14 @@ class _CourtListScreenState extends State<CourtListScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-
-                  // Category Pills
                   SizedBox(
                     height: 35,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length,
                       itemBuilder: (context, index) {
-                        bool isSelected = navProvider.selectedSport == _categories[index];
+                        bool isSelected =
+                            navProvider.selectedSport == _categories[index];
                         return GestureDetector(
                           onTap: () {
                             navProvider.setSelectedSport(_categories[index]);
@@ -121,14 +189,18 @@ class _CourtListScreenState extends State<CourtListScreen> {
                             margin: const EdgeInsets.only(right: 12),
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(
-                              color: isSelected ? greenColor : const Color(0xFF3C5E18),
+                              color: isSelected
+                                  ? greenColor
+                                  : const Color(0xFF3C5E18),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               _categories[index],
                               style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.white70,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white70,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -138,81 +210,33 @@ class _CourtListScreenState extends State<CourtListScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // List of Stadiums
-                  const StadiumCard(
-                    name: 'Alahly Stadium',
-                    location: 'Nasr city, cairo',
-                    price: '350 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.8,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Zamalek Stadium',
-                    location: 'Nasr city, cairo',
-                    price: '350 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.8,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const StadiumCard(
-                    name: 'Pyramids',
-                    location: 'Nasr city, cairo',
-                    price: '400 EGP',
-                    imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-                    sport: 'Football',
-                    rating: 4.9,
-                  ),
-                  const SizedBox(height: 16),
-                  const SizedBox(height: 80), // Padding for bottom nav
+                  if (filteredStadiums.isEmpty)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.only(top: 50),
+                        child: Text(
+                          'No courts found matching your search.',
+                          style: TextStyle(color: Colors.white54, fontSize: 16),
+                        ),
+                      ),
+                    )
+                  else
+                    ...filteredStadiums
+                        .map(
+                          (stadium) => Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: StadiumCard(
+                              name: stadium['name'],
+                              location: stadium['location'],
+                              price: stadium['price'],
+                              imageUrl: stadium['imageUrl'],
+                              sport: stadium['sport'],
+                              rating: stadium['rating'],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  const SizedBox(height: 80),
                 ],
               ),
             ),

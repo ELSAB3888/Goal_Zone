@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../widgets/main_layout.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({Key? key}) : super(key: key);
@@ -122,7 +123,10 @@ class _SignupScreenState extends State<SignupScreen> {
               // Create Account Button
               ElevatedButton(
                 onPressed: () {
-                  // Navigate to Home
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const MainLayout()),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: greenColor,
