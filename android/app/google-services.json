@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "635094965396",
+    "project_id": "goalzone-deda6",
+    "storage_bucket": "goalzone-deda6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:635094965396:android:36197ef912d426d96ee881",
+        "android_client_info": {
+          "package_name": "com.antigravity.sportsbooking.sports_booking_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "635094965396-hns606tqgsc9hd4eh5dkjqcl2ncuc1d6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.antigravity.sportsbooking.sports_booking_app",
+            "certificate_hash": "3d5737ed6d30a74b1c7fe249699f7a302ff2adf5"
+          }
+        },
+        {
+          "client_id": "635094965396-0ul4nqgcsavrol5sltekde7gf7tc5vuk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAB1GRNfJ0nagoIozOPk9q5F9DXVJ-u44U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "635094965396-0ul4nqgcsavrol5sltekde7gf7tc5vuk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

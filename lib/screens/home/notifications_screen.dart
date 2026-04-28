@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class NotificationsScreen extends StatelessWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,21 +12,22 @@ class NotificationsScreen extends StatelessWidget {
     final List<Map<String, String>> notifications = [
       {
         'title': 'Booking Confirmed!',
-        'message': 'Your booking at Alahly Stadium is confirmed for tomorrow at 8:00 PM.',
+        'message':
+            'Your booking at Alahly Stadium is confirmed for tomorrow at 8:00 PM.',
         'time': '2 mins ago',
-        'type': 'booking'
+        'type': 'booking',
       },
       {
         'title': 'New Offer!',
         'message': 'Get 20% off on your next booking at Zamalek Club.',
         'time': '1 hour ago',
-        'type': 'offer'
+        'type': 'offer',
       },
       {
         'title': 'Reminder',
         'message': 'Don\'t forget your match today at 9:00 PM.',
         'time': '3 hours ago',
-        'type': 'reminder'
+        'type': 'reminder',
       },
     ];
 
@@ -39,7 +40,10 @@ class NotificationsScreen extends StatelessWidget {
           icon: Icon(Icons.arrow_back, color: greenColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Notifications', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Notifications',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: notifications.isEmpty
@@ -47,9 +51,16 @@ class NotificationsScreen extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.notifications_off_outlined, size: 80, color: Colors.white24),
+                  Icon(
+                    Icons.notifications_off_outlined,
+                    size: 80,
+                    color: Colors.white24,
+                  ),
                   const SizedBox(height: 16),
-                  const Text('No notifications yet', style: TextStyle(color: Colors.white54, fontSize: 18)),
+                  const Text(
+                    'No notifications yet',
+                    style: TextStyle(color: Colors.white54, fontSize: 18),
+                  ),
                 ],
               ),
             )
@@ -64,7 +75,10 @@ class NotificationsScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF2C2C2C),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: greenColor.withOpacity(0.2), width: 1),
+                    border: Border.all(
+                      color: greenColor.withOpacity(0.2),
+                      width: 1,
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,18 +105,29 @@ class NotificationsScreen extends StatelessWidget {
                               children: [
                                 Text(
                                   item['title']!,
-                                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 Text(
                                   item['time']!,
-                                  style: const TextStyle(color: Colors.white54, fontSize: 12),
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             Text(
                               item['message']!,
-                              style: const TextStyle(color: Colors.white70, fontSize: 14, height: 1.4),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),

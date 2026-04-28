@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../core/providers/locale_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +25,10 @@ class SettingsScreen extends StatelessWidget {
           bool isEnglish = localeProvider.locale.languageCode == 'en';
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -38,7 +41,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // English Option
                 _buildLanguageOption(
                   title: 'English',
@@ -49,7 +52,7 @@ class SettingsScreen extends StatelessWidget {
                   },
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Arabic Option
                 _buildLanguageOption(
                   title: 'Arabic',

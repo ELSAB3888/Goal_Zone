@@ -12,7 +12,7 @@ class TicketScreen extends StatelessWidget {
   final String qrData;
 
   const TicketScreen({
-    Key? key,
+    super.key,
     required this.stadiumName,
     required this.date,
     required this.time,
@@ -21,7 +21,7 @@ class TicketScreen extends StatelessWidget {
     required this.duration,
     required this.sport,
     required this.qrData,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,9 @@ class TicketScreen extends StatelessWidget {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     image: DecorationImage(
-                      image: NetworkImage('https://images.unsplash.com/photo-1518605368461-1e1e1140728c?q=80&w=800&auto=format&fit=crop'),
+                      image: NetworkImage(
+                        'https://images.unsplash.com/photo-1518605368461-1e1e1140728c?q=80&w=800&auto=format&fit=crop',
+                      ),
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -57,7 +59,11 @@ class TicketScreen extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: IconButton(
-                        icon: Icon(Icons.arrow_back, color: greenColor, size: 28),
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: greenColor,
+                          size: 28,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -66,7 +72,10 @@ class TicketScreen extends StatelessWidget {
                 // Ticket Card
                 Container(
                   margin: const EdgeInsets.only(top: 150, left: 24, right: 24),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 32,
+                  ),
                   decoration: BoxDecoration(
                     color: cardColor,
                     borderRadius: BorderRadius.circular(16),
@@ -82,33 +91,51 @@ class TicketScreen extends StatelessWidget {
                     children: [
                       // Sport Pill
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: greenColor.withOpacity(0.8),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           sport,
-                          style: const TextStyle(color: Colors.white, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 12),
                       // Stadium Name
                       Text(
                         stadiumName,
-                        style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 20),
                       const Divider(color: Colors.white24, thickness: 1),
                       const SizedBox(height: 20),
-                      
+
                       // Details Rows
-                      _buildDetailRow(Icons.calendar_today_outlined, 'Date:', date),
+                      _buildDetailRow(
+                        Icons.calendar_today_outlined,
+                        'Date:',
+                        date,
+                      ),
                       const SizedBox(height: 16),
                       _buildDetailRow(Icons.access_time, 'Time:', time),
                       const SizedBox(height: 16),
-                      _buildDetailRow(Icons.location_on_outlined, 'Location:', location),
-                      
+                      _buildDetailRow(
+                        Icons.location_on_outlined,
+                        'Location:',
+                        location,
+                      ),
+
                       const SizedBox(height: 20),
                       const Divider(color: Colors.white24, thickness: 1),
                       const SizedBox(height: 20),
@@ -117,13 +144,29 @@ class TicketScreen extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total Paid', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                          const Text(
+                            'Total Paid',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           RichText(
                             text: TextSpan(
                               style: const TextStyle(fontSize: 16),
                               children: [
-                                TextSpan(text: totalPrice, style: TextStyle(color: greenColor, fontWeight: FontWeight.bold)),
-                                TextSpan(text: '/\$duration', style: const TextStyle(color: Colors.white)),
+                                TextSpan(
+                                  text: totalPrice,
+                                  style: TextStyle(
+                                    color: greenColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '/\$duration',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ],
                             ),
                           ),
@@ -142,13 +185,45 @@ class TicketScreen extends StatelessWidget {
                             child: Stack(
                               children: [
                                 // Top Left
-                                Positioned(top: 0, left: 0, child: _buildBracketCorner(greenColor, isTop: true, isLeft: true)),
+                                Positioned(
+                                  top: 0,
+                                  left: 0,
+                                  child: _buildBracketCorner(
+                                    greenColor,
+                                    isTop: true,
+                                    isLeft: true,
+                                  ),
+                                ),
                                 // Top Right
-                                Positioned(top: 0, right: 0, child: _buildBracketCorner(greenColor, isTop: true, isLeft: false)),
+                                Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: _buildBracketCorner(
+                                    greenColor,
+                                    isTop: true,
+                                    isLeft: false,
+                                  ),
+                                ),
                                 // Bottom Left
-                                Positioned(bottom: 0, left: 0, child: _buildBracketCorner(greenColor, isTop: false, isLeft: true)),
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  child: _buildBracketCorner(
+                                    greenColor,
+                                    isTop: false,
+                                    isLeft: true,
+                                  ),
+                                ),
                                 // Bottom Right
-                                Positioned(bottom: 0, right: 0, child: _buildBracketCorner(greenColor, isTop: false, isLeft: false)),
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: _buildBracketCorner(
+                                    greenColor,
+                                    isTop: false,
+                                    isLeft: false,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -170,7 +245,7 @@ class TicketScreen extends StatelessWidget {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 40),
 
             // 2. Bottom Buttons
@@ -185,11 +260,17 @@ class TicketScreen extends StatelessWidget {
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: greenColor, width: 1),
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text(
                         'Download Ticket',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -199,16 +280,24 @@ class TicketScreen extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: () {
                         // Pop all the way back to the home screen (root of the navigator)
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        Navigator.of(
+                          context,
+                        ).popUntil((route) => route.isFirst);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: greenColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                       child: const Text(
                         'Back to Home',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -228,7 +317,14 @@ class TicketScreen extends StatelessWidget {
       children: [
         Icon(icon, color: Colors.white70, size: 18),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         const SizedBox(width: 16),
         Expanded(
           child: Text(
@@ -241,17 +337,29 @@ class TicketScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBracketCorner(Color color, {required bool isTop, required bool isLeft}) {
+  Widget _buildBracketCorner(
+    Color color, {
+    required bool isTop,
+    required bool isLeft,
+  }) {
     // A simple widget to draw the L-shaped brackets around the QR code
     return Container(
       width: 20,
       height: 20,
       decoration: BoxDecoration(
         border: Border(
-          top: isTop ? const BorderSide(color: Colors.white, width: 3) : BorderSide.none,
-          bottom: !isTop ? const BorderSide(color: Colors.white, width: 3) : BorderSide.none,
-          left: isLeft ? const BorderSide(color: Colors.white, width: 3) : BorderSide.none,
-          right: !isLeft ? const BorderSide(color: Colors.white, width: 3) : BorderSide.none,
+          top: isTop
+              ? const BorderSide(color: Colors.white, width: 3)
+              : BorderSide.none,
+          bottom: !isTop
+              ? const BorderSide(color: Colors.white, width: 3)
+              : BorderSide.none,
+          left: isLeft
+              ? const BorderSide(color: Colors.white, width: 3)
+              : BorderSide.none,
+          right: !isLeft
+              ? const BorderSide(color: Colors.white, width: 3)
+              : BorderSide.none,
         ),
       ),
     );

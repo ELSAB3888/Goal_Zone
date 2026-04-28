@@ -3,8 +3,8 @@ import 'reset_password_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
-  
-  const OtpScreen({Key? key, this.phoneNumber = "95****4572"}) : super(key: key);
+
+  const OtpScreen({super.key, this.phoneNumber = "95****4572"});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -19,7 +19,10 @@ class _OtpScreenState extends State<OtpScreen> {
   void initState() {
     super.initState();
     _focusNodes = List.generate(_otpLength, (index) => FocusNode());
-    _controllers = List.generate(_otpLength, (index) => TextEditingController());
+    _controllers = List.generate(
+      _otpLength,
+      (index) => TextEditingController(),
+    );
   }
 
   @override
@@ -110,10 +113,7 @@ class _OtpScreenState extends State<OtpScreen> {
                   const SizedBox(width: 8),
                   const Text(
                     'Auto fetching OTP',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                 ],
               ),
@@ -167,7 +167,9 @@ class _OtpScreenState extends State<OtpScreen> {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const ResetPasswordScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const ResetPasswordScreen(),
+                    ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -192,10 +194,7 @@ class _OtpScreenState extends State<OtpScreen> {
               Center(
                 child: Text(
                   'Didn\'t receive it? Retry in 00:60',
-                  style: TextStyle(
-                    color: greenColor,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(color: greenColor, fontSize: 16),
                 ),
               ),
             ],

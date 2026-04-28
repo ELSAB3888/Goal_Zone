@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'otp_screen.dart';
 
 class ForgotPasswordScreen extends StatelessWidget {
-  const ForgotPasswordScreen({Key? key}) : super(key: key);
+  const ForgotPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -40,10 +40,7 @@ class ForgotPasswordScreen extends StatelessWidget {
               const Text(
                 'Please write phone number',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const SizedBox(height: 40),
 
@@ -54,7 +51,10 @@ class ForgotPasswordScreen extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: 'Phone number',
                   hintStyle: const TextStyle(color: Colors.white54),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: greenColor, width: 1),

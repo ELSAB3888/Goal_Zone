@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/booking_provider.dart';
+import '../../core/models/booking_model.dart';
+import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class MyBookingsScreen extends StatefulWidget {
-  const MyBookingsScreen({Key? key}) : super(key: key);
+  const MyBookingsScreen({super.key});
 
   @override
   State<MyBookingsScreen> createState() => _MyBookingsScreenState();
@@ -9,6 +14,17 @@ class MyBookingsScreen extends StatefulWidget {
 
 class _MyBookingsScreenState extends State<MyBookingsScreen> {
   int _selectedTab = 0; // 0: Upcoming, 1: Completed, 2: Cancelled
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch bookings when screen loads
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<BookingProvider>(context, listen: false).fetchMyBookings();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,17 +41,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             floating: false,
             pinned: true,
             backgroundColor: darkBg,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: greenColor, size: 28),
-              onPressed: () {
-                // If it's a main tab, popping might not make sense, but kept as per UI.
-              },
-            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
-                'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop', // Better booking banner image
+                'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(color: Colors.black),
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(color: Colors.black),
               ),
             ),
           ),
@@ -76,21 +87,81 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // 4. List of Bookings
-                  if (_selectedTab == 0) ...[
-                    _buildUpcomingCard(greenColor),
-                    const SizedBox(height: 16),
-                    _buildUpcomingCard(greenColor),
-                  ] else if (_selectedTab == 1) ...[
-                    _buildCompletedCard(greenColor),
-                    const SizedBox(height: 16),
-                    _buildCompletedCard(greenColor),
-                  ] else ...[
-                    _buildCancelledCard(greenColor),
-                    const SizedBox(height: 16),
-                    _buildCancelledCard(greenColor),
-                  ],
-                  
+                  // 4. List of Bookings from API
+                  Consumer<BookingProvider>(
+                    builder: (context, bookingProvider, child) {
+                      if (bookingProvider.isLoading) {
+                        return const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(40.0),
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF4C8C18),
+                            ),
+                          ),
+                        );
+                      }
+
+                      List<BookingModel> currentList;
+                      if (_selectedTab == 0) {
+                        currentList = bookingProvider.upcoming;
+                      } else if (_selectedTab == 1) {
+                        currentList = bookingProvider.completed;
+                      } else {
+                        currentList = bookingProvider.cancelled;
+                      }
+
+                      if (currentList.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(40.0),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.sports_soccer,
+                                  color: greenColor.withOpacity(0.4),
+                                  size: 64,
+                                ),
+                                const SizedBox(height: 16),
+                                const Text(
+                                  'No bookings found',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+
+                      return Column(
+                        children: currentList.map((booking) {
+                          if (_selectedTab == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildUpcomingCard(
+                                greenColor,
+                                booking,
+                                bookingProvider,
+                              ),
+                            );
+                          } else if (_selectedTab == 1) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildCompletedCard(greenColor, booking),
+                            );
+                          } else {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: _buildCancelledCard(greenColor, booking),
+                            );
+                          }
+                        }).toList(),
+                      );
+                    },
+                  ),
+
                   const SizedBox(height: 80), // Padding for Bottom Nav Bar
                 ],
               ),
@@ -113,7 +184,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: isSelected ? greenColor : Colors.transparent,
-            borderRadius: BorderRadius.circular(7), // slightly less than outer container
+            borderRadius: BorderRadius.circular(7),
           ),
           alignment: Alignment.center,
           child: Text(
@@ -129,7 +200,16 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildUpcomingCard(Color greenColor) {
+  Widget _buildUpcomingCard(
+    Color greenColor,
+    BookingModel booking,
+    BookingProvider provider,
+  ) {
+    final imageUrl = booking.stadium.imageUrl.isNotEmpty
+        ? booking.stadium.imageUrl
+        : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80';
+    final dateStr = DateFormat('dd-MM-yyyy').format(booking.date);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
@@ -144,14 +224,21 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Image
-              Container(
-                width: 120,
-                height: 100,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  image: const DecorationImage(
-                    image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
-                    fit: BoxFit.cover,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  imageUrl,
+                  width: 120,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (ctx, err, st) => Container(
+                    width: 120,
+                    height: 100,
+                    color: Colors.grey[800],
+                    child: const Icon(
+                      Icons.sports_soccer,
+                      color: Colors.white54,
+                    ),
                   ),
                 ),
               ),
@@ -161,29 +248,58 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Sport Pill & Price
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: greenColor.withOpacity(0.8),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Text('Football', style: TextStyle(color: Colors.white, fontSize: 10)),
+                          child: Text(
+                            booking.stadium.sport,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
-                        Text('700EGP', style: TextStyle(color: greenColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                        Text(
+                          '${booking.totalPrice.toInt()} EGP',
+                          style: TextStyle(
+                            color: greenColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Text('Alahly Stadium', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text(
+                      booking.stadium.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    _buildInfoRow(Icons.location_on_outlined, 'Nasr City, Cairo ,Egypt'),
+                    if (booking.stadium.location.isNotEmpty)
+                      _buildInfoRow(
+                        Icons.location_on_outlined,
+                        booking.stadium.location,
+                      ),
                     const SizedBox(height: 4),
-                    _buildInfoRow(Icons.calendar_today_outlined, '10-2-2026'),
+                    _buildInfoRow(Icons.calendar_today_outlined, dateStr),
                     const SizedBox(height: 4),
-                    _buildInfoRow(Icons.access_time, 'From 10:00am : 12:00am'),
+                    _buildInfoRow(
+                      Icons.access_time,
+                      'From ${booking.timeSlot}',
+                    ),
                   ],
                 ),
               ),
@@ -203,36 +319,83 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _buildActionButton(
-                  icon: Icons.edit_outlined,
-                  label: 'Edit',
-                  color: Colors.transparent,
-                  borderColor: greenColor,
+                child: GestureDetector(
+                  onTap: () {
+                    _showQRDialog(context, booking, greenColor);
+                  },
+                  child: _buildActionButton(
+                    icon: Icons.qr_code_2,
+                    label: 'View QR',
+                    color: const Color(0xFF3355FF),
+                    borderColor: Colors.transparent,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.ios_share,
-                  label: 'Share',
-                  color: Colors.transparent,
-                  borderColor: greenColor,
-                ),
+          // Cancel button
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: const Color(0xFF333333),
+                    title: const Text(
+                      'Cancel Booking',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    content: const Text(
+                      'Are you sure you want to cancel this booking?',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text('No', style: TextStyle(color: greenColor)),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text(
+                          'Yes',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirm == true && mounted) {
+                  final success = await provider.cancelBooking(booking.id);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? 'Booking cancelled successfully'
+                              : 'Failed to cancel booking',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: success ? greenColor : Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(
+                Icons.cancel_outlined,
+                color: Colors.red,
+                size: 16,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildActionButton(
-                  icon: Icons.phone_outlined,
-                  label: 'call court',
-                  color: const Color(0xFF3355FF), // Blue color from the image
-                  borderColor: Colors.transparent,
-                ),
+              label: const Text(
+                'Cancel Booking',
+                style: TextStyle(color: Colors.red, fontSize: 12),
               ),
-            ],
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red, width: 1),
+              ),
+            ),
           ),
         ],
       ),
@@ -255,7 +418,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildActionButton({required IconData icon, required String label, required Color color, required Color borderColor}) {
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color borderColor,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
@@ -268,13 +436,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
         children: [
           Icon(icon, color: Colors.white, size: 16),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildCompletedCard(Color greenColor) {
+  Widget _buildCompletedCard(Color greenColor, BookingModel booking) {
+    final imageUrl = booking.stadium.imageUrl.isNotEmpty
+        ? booking.stadium.imageUrl
+        : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80';
+    final dateStr = DateFormat('dd-MM-yyyy').format(booking.date);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
@@ -285,59 +465,100 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Container(
-            width: 120,
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
-                fit: BoxFit.cover,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              width: 120,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, err, st) => Container(
+                width: 120,
+                height: 100,
+                color: Colors.grey[800],
+                child: const Icon(Icons.sports_soccer, color: Colors.white54),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sport Pill & Price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: greenColor.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text('Football', style: TextStyle(color: Colors.white, fontSize: 10)),
+                      child: Text(
+                        booking.stadium.sport,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
                     ),
-                    Text('700EGP', style: TextStyle(color: greenColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${booking.totalPrice.toInt()} EGP',
+                      style: TextStyle(
+                        color: greenColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text('Alahly Stadium', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  booking.stadium.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                _buildInfoRow(Icons.location_on_outlined, 'Nasr City, Cairo ,Egypt'),
+                if (booking.stadium.location.isNotEmpty)
+                  _buildInfoRow(
+                    Icons.location_on_outlined,
+                    booking.stadium.location,
+                  ),
                 const SizedBox(height: 4),
-                _buildInfoRow(Icons.calendar_today_outlined, '10-2-2026'),
+                _buildInfoRow(Icons.calendar_today_outlined, dateStr),
                 const SizedBox(height: 4),
-                
-                // Bottom row in details: Time + Completed Status Pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: _buildInfoRow(Icons.access_time, 'From 10:00am : 12:00am')),
+                    Expanded(
+                      child: _buildInfoRow(
+                        Icons.access_time,
+                        'From ${booking.timeSlot}',
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: greenColor,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Text('Completed', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Completed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -349,7 +570,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     );
   }
 
-  Widget _buildCancelledCard(Color greenColor) {
+  Widget _buildCancelledCard(Color greenColor, BookingModel booking) {
+    final imageUrl = booking.stadium.imageUrl.isNotEmpty
+        ? booking.stadium.imageUrl
+        : 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80';
+    final dateStr = DateFormat('dd-MM-yyyy').format(booking.date);
+
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
@@ -360,70 +586,179 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Container(
-            width: 120,
-            height: 100,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
-              image: const DecorationImage(
-                image: NetworkImage('https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=800&q=80'),
-                fit: BoxFit.cover,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              imageUrl,
+              width: 120,
+              height: 100,
+              fit: BoxFit.cover,
+              errorBuilder: (ctx, err, st) => Container(
+                width: 120,
+                height: 100,
+                color: Colors.grey[800],
+                child: const Icon(Icons.sports_soccer, color: Colors.white54),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sport Pill & Price
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: greenColor.withOpacity(0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text('Football', style: TextStyle(color: Colors.white, fontSize: 10)),
+                      child: Text(
+                        booking.stadium.sport,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
                     ),
-                    Text('700EGP', style: TextStyle(color: greenColor, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(
+                      '${booking.totalPrice.toInt()} EGP',
+                      style: TextStyle(
+                        color: greenColor,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
-                const Text('Alahly Stadium', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                Text(
+                  booking.stadium.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 8),
-                _buildInfoRow(Icons.location_on_outlined, 'Nasr City, Cairo ,Egypt'),
+                if (booking.stadium.location.isNotEmpty)
+                  _buildInfoRow(
+                    Icons.location_on_outlined,
+                    booking.stadium.location,
+                  ),
                 const SizedBox(height: 4),
-                _buildInfoRow(Icons.calendar_today_outlined, '10-2-2026'),
+                _buildInfoRow(Icons.calendar_today_outlined, dateStr),
                 const SizedBox(height: 4),
-                
-                // Bottom row in details: Time + Cancelled Status Pill
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(child: _buildInfoRow(Icons.access_time, 'From 10:00am : 12:00am')),
+                    Expanded(
+                      child: _buildInfoRow(
+                        Icons.access_time,
+                        'From ${booking.timeSlot}',
+                      ),
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE53935), // Red color for cancelled
+                        color: const Color(0xFFE53935),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.cancel_outlined, color: Colors.white, size: 12),
-                          const SizedBox(width: 4),
-                          const Text('Cancelled', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        children: const [
+                          Icon(
+                            Icons.cancel_outlined,
+                            color: Colors.white,
+                            size: 12,
+                          ),
+                          SizedBox(width: 4),
+                          Text(
+                            'Cancelled',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showQRDialog(
+    BuildContext context,
+    BookingModel booking,
+    Color greenColor,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF2C2C2C),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Booking QR Code',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: greenColor, fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: QrImageView(
+                data: booking.qrCodeData,
+                version: QrVersions.auto,
+                size: 200.0,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              booking.stadium.name,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${DateFormat('dd MMM yyyy').format(booking.date)} | ${booking.timeSlot}',
+              style: const TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Token: ${booking.qrCodeData}',
+              style: const TextStyle(color: Colors.white54, fontSize: 10),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              'Close',
+              style: TextStyle(color: greenColor, fontWeight: FontWeight.bold),
             ),
           ),
         ],

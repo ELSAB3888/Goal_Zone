@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/stadium_card.dart';
 import '../../core/providers/navigation_provider.dart';
+import '../../core/providers/stadium_provider.dart';
+import '../../core/providers/auth_provider.dart';
 import 'notifications_screen.dart';
 import '../court/filter_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -16,49 +18,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
 
-  final List<Map<String, dynamic>> _allStadiums = [
-    {
-      'name': 'Alahly Stadium',
-      'location': 'Nasr city, cairo',
-      'price': '350 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.8,
-    },
-    {
-      'name': 'Zamalek Club',
-      'location': 'Mohandeseen, cairo',
-      'price': '300 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.8,
-    },
-    {
-      'name': 'Pyramids Court',
-      'location': 'New Cairo, cairo',
-      'price': '400 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.9,
-    },
-  ];
-
   @override
   Widget build(BuildContext context) {
     final greenColor = const Color(0xFF4C8C18);
     final darkBg = const Color(0xFF1E1E1E);
 
-    final filteredStadiums = _allStadiums.where((stadium) {
-      return stadium['name'].toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          ) ||
-          stadium['location'].toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          );
-    }).toList();
+    final stadiumProvider = Provider.of<StadiumProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    final userName = authProvider.currentUser?.name ?? '';
+
+    final filteredStadiums = stadiumProvider.searchStadiums(_searchQuery);
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -113,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             Text(
-                              'Mohamed ELSabi',
+                              userName,
                               style: TextStyle(
                                 color: greenColor,
                                 fontSize: 16,
@@ -157,19 +126,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.network(
-                        'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop',
+                        stadiumProvider.allStadiums.isNotEmpty
+                            ? stadiumProvider.allStadiums[0].imageUrl
+                            : 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop',
                         width: double.infinity,
                         height: 180,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) {
-                          return Container(
+                          return Image.network(
+                            'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop',
+                            width: double.infinity,
                             height: 180,
-                            color: Colors.grey[900],
-                            child: const Icon(
-                              Icons.broken_image,
-                              color: Color(0xFF4C8C18),
-                              size: 50,
-                            ),
+                            fit: BoxFit.cover,
                           );
                         },
                       ),
@@ -351,18 +319,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-
-                // 6. Featured Stadiums (Filtered by search)
-                const Text(
-                  'Featured Play Grounds',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (filteredStadiums.isEmpty)
+                if (stadiumProvider.isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(40.0),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF4C8C18),
+                      ),
+                    ),
+                  )
+                else if (filteredStadiums.isEmpty)
                   const Center(
                     child: Padding(
                       padding: EdgeInsets.all(20.0),
@@ -373,21 +339,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   )
                 else
-                  ...filteredStadiums
-                      .map(
-                        (stadium) => Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: StadiumCard(
-                            name: stadium['name'],
-                            location: stadium['location'],
-                            price: stadium['price'],
-                            imageUrl: stadium['imageUrl'],
-                            sport: stadium['sport'],
-                            rating: stadium['rating'],
-                          ),
-                        ),
-                      )
-                      .toList(),
+                  ...filteredStadiums.map(
+                    (stadium) => Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: StadiumCard(
+                        name: stadium.name,
+                        location: stadium.location,
+                        price: stadium.price,
+                        imageUrl: stadium.imageUrl,
+                        sport: stadium.sport,
+                        rating: stadium.rating,
+                        stadiumId: stadium.id,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

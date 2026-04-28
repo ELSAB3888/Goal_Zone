@@ -4,11 +4,11 @@ void main() {
   final baseDir = 'sports_booking_app/lib';
 
   // Create directories
-  Directory(baseDir + '/core/models').createSync(recursive: true);
-  Directory(baseDir + '/core/providers').createSync(recursive: true);
+  Directory('$baseDir/core/models').createSync(recursive: true);
+  Directory('$baseDir/core/providers').createSync(recursive: true);
 
   // 1. Models
-  File(baseDir + '/core/models/user_model.dart').writeAsStringSync('''
+  File('$baseDir/core/models/user_model.dart').writeAsStringSync('''
 class UserModel {
   final String id;
   final String name;
@@ -20,7 +20,7 @@ class UserModel {
 }
 ''');
 
-  File(baseDir + '/core/models/stadium_model.dart').writeAsStringSync('''
+  File('$baseDir/core/models/stadium_model.dart').writeAsStringSync('''
 class StadiumModel {
   final String id;
   final String name;
@@ -44,7 +44,7 @@ class StadiumModel {
 }
 ''');
 
-  File(baseDir + '/core/models/booking_model.dart').writeAsStringSync('''
+  File('$baseDir/core/models/booking_model.dart').writeAsStringSync('''
 import 'stadium_model.dart';
 
 enum BookingStatus { upcoming, completed, cancelled }
@@ -73,7 +73,7 @@ class BookingModel {
 ''');
 
   // 2. Providers
-  File(baseDir + '/core/providers/auth_provider.dart').writeAsStringSync('''
+  File('$baseDir/core/providers/auth_provider.dart').writeAsStringSync('''
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -112,7 +112,7 @@ class AuthProvider extends ChangeNotifier {
 }
 ''');
 
-  File(baseDir + '/core/providers/booking_provider.dart').writeAsStringSync('''
+  File('$baseDir/core/providers/booking_provider.dart').writeAsStringSync('''
 import 'package:flutter/material.dart';
 import '../models/stadium_model.dart';
 import '../models/booking_model.dart';
@@ -170,7 +170,7 @@ class BookingProvider extends ChangeNotifier {
 }
 ''');
 
-  File(baseDir + '/core/providers/locale_provider.dart').writeAsStringSync('''
+  File('$baseDir/core/providers/locale_provider.dart').writeAsStringSync('''
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -202,7 +202,7 @@ class LocaleProvider extends ChangeNotifier {
 ''');
 
   // 3. Update Main Layout for IndexedStack
-  File(baseDir + '/widgets/main_layout.dart').writeAsStringSync('''
+  File('$baseDir/widgets/main_layout.dart').writeAsStringSync('''
 import 'package:flutter/material.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/court/court_list_screen.dart';

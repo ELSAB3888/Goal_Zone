@@ -8,7 +8,7 @@ import '../core/constants/app_colors.dart';
 import '../core/providers/navigation_provider.dart';
 
 class MainLayout extends StatefulWidget {
-  const MainLayout({Key? key}) : super(key: key);
+  const MainLayout({super.key});
 
   @override
   State<MainLayout> createState() => _MainLayoutState();

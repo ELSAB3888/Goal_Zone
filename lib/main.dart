@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'widgets/main_layout.dart';
 import 'screens/auth/login_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'core/providers/auth_provider.dart';
 import 'core/providers/booking_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/providers/navigation_provider.dart';
+import 'core/providers/stadium_provider.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization error: $e');
+  }
   runApp(const SportsBookingApp());
 }
 
 class SportsBookingApp extends StatelessWidget {
-  const SportsBookingApp({Key? key}) : super(key: key);
+  const SportsBookingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +32,7 @@ class SportsBookingApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => NavigationProvider()),
+        ChangeNotifierProvider(create: (_) => StadiumProvider()),
       ],
       child: Consumer<LocaleProvider>(
         builder: (context, localeProvider, child) {
@@ -55,7 +66,7 @@ class SportsBookingApp extends StatelessWidget {
 }
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({Key? key}) : super(key: key);
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -82,11 +93,40 @@ class _SplashScreenState extends State<SplashScreen>
 
     _animationController.forward();
 
-    // Navigate to next screen after 3 seconds
-    Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
+    // Fetch initial data
+    Future.microtask(() {
+      if (mounted) {
+        Provider.of<StadiumProvider>(context, listen: false).fetchStadiums();
+      }
+    });
+
+    // Navigate to next screen after animation, checking authentication state
+    Timer(const Duration(seconds: 3), () async {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (mounted) {
+        if (token != null && token.isNotEmpty) {
+          // Fetch user profile
+          final success = await Provider.of<AuthProvider>(
+            context,
+            listen: false,
+          ).loadUser();
+          if (success && mounted) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const MainLayout()),
+            );
+            return;
+          }
+        }
+
+        // Fallback to LoginScreen if no token or loadUser failed
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      }
     });
   }
 

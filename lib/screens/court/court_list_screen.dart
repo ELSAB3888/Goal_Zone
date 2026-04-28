@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../widgets/stadium_card.dart';
 import '../../core/providers/navigation_provider.dart';
+import '../../core/providers/stadium_provider.dart';
 import 'filter_screen.dart';
 
 class CourtListScreen extends StatefulWidget {
-  const CourtListScreen({Key? key}) : super(key: key);
+  const CourtListScreen({super.key});
 
   @override
   State<CourtListScreen> createState() => _CourtListScreenState();
@@ -15,37 +16,6 @@ class _CourtListScreenState extends State<CourtListScreen> {
   final List<String> _categories = ['All', 'Football'];
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
-
-  // Dynamic stadium data - ONLY Football for now
-  final List<Map<String, dynamic>> _allStadiums = [
-    {
-      'name': 'Alahly Stadium',
-      'location': 'Nasr city, cairo',
-      'price': '350 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.8,
-    },
-    {
-      'name': 'Zamalek Stadium',
-      'location': 'Mohandeseen, cairo',
-      'price': '320 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.7,
-    },
-    {
-      'name': 'Pyramids Court',
-      'location': 'New Cairo, cairo',
-      'price': '400 EGP',
-      'imageUrl':
-          'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=600&auto=format&fit=crop',
-      'sport': 'Football',
-      'rating': 4.9,
-    },
-  ];
 
   @override
   void dispose() {
@@ -59,20 +29,13 @@ class _CourtListScreenState extends State<CourtListScreen> {
     final darkBg = const Color(0xFF1E1E1E);
     final navProvider = Provider.of<NavigationProvider>(context);
 
+    final stadiumProvider = Provider.of<StadiumProvider>(context);
+
     // Filter logic
-    final List<Map<String, dynamic>> filteredStadiums = _allStadiums.where((
-      stadium,
-    ) {
-      final bool matchesSport =
-          navProvider.selectedSport == 'All' ||
-          stadium['sport'] == navProvider.selectedSport;
-      final bool matchesSearch =
-          stadium['name'].toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          stadium['location'].toLowerCase().contains(
-            _searchQuery.toLowerCase(),
-          );
-      return matchesSport && matchesSearch;
-    }).toList();
+    final filteredStadiums = stadiumProvider.searchStadiums(
+      _searchQuery,
+      sport: navProvider.selectedSport,
+    );
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -83,12 +46,6 @@ class _CourtListScreenState extends State<CourtListScreen> {
             floating: false,
             pinned: true,
             backgroundColor: darkBg,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: greenColor, size: 28),
-              onPressed: () {
-                navProvider.setIndex(0);
-              },
-            ),
             flexibleSpace: FlexibleSpaceBar(
               background: Image.network(
                 'https://images.unsplash.com/photo-1551958219-acbc608c6377?q=80&w=1000&auto=format&fit=crop', // Unified banner image
@@ -221,21 +178,20 @@ class _CourtListScreenState extends State<CourtListScreen> {
                       ),
                     )
                   else
-                    ...filteredStadiums
-                        .map(
-                          (stadium) => Padding(
-                            padding: const EdgeInsets.only(bottom: 16),
-                            child: StadiumCard(
-                              name: stadium['name'],
-                              location: stadium['location'],
-                              price: stadium['price'],
-                              imageUrl: stadium['imageUrl'],
-                              sport: stadium['sport'],
-                              rating: stadium['rating'],
-                            ),
-                          ),
-                        )
-                        .toList(),
+                    ...filteredStadiums.map(
+                      (stadium) => Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: StadiumCard(
+                          name: stadium.name,
+                          location: stadium.location,
+                          price: stadium.price,
+                          imageUrl: stadium.imageUrl,
+                          sport: stadium.sport,
+                          rating: stadium.rating,
+                          stadiumId: stadium.id,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 80),
                 ],
               ),

@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
-import '../booking/ticket_screen.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import '../../core/models/stadium_model.dart';
+import '../../core/providers/booking_provider.dart';
+import '../booking/my_bookings_screen.dart';
 
 class StadiumDetailScreen extends StatefulWidget {
   final String name;
@@ -7,36 +11,80 @@ class StadiumDetailScreen extends StatefulWidget {
   final String price;
   final String location;
   final String sport;
+  final String stadiumId;
 
   const StadiumDetailScreen({
-    Key? key,
+    super.key,
     required this.name,
     required this.imageUrl,
     required this.price,
     required this.location,
     required this.sport,
-  }) : super(key: key);
+    required this.stadiumId,
+  });
 
   @override
   State<StadiumDetailScreen> createState() => _StadiumDetailScreenState();
 }
 
 class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
-  int _selectedDayIndex = 3; // Default 'Fri 13' selected as per image
+  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
 
-  final List<Map<String, String>> _days = [
-    {'day': 'Tue', 'date': '10'},
-    {'day': 'Wed', 'date': '11'},
-    {'day': 'Thu', 'date': '12'},
-    {'day': 'Fri', 'date': '13'},
-    {'day': 'Sat', 'date': '14'},
-    {'day': 'Sun', 'date': '15'},
-  ];
+  // Each slot is a Map: {'from': '14:00', 'to': '15:00'}
+  Map<String, String>? _selectedSlot;
+  List<Map<String, String>> _availableSlots = [];
+  bool _loadingSlots = false;
 
-  String? _selectedFromTime;
-  String? _selectedToTime;
+  List<DateTime> get _nextDays =>
+      List.generate(7, (i) => DateTime.now().add(Duration(days: i)));
 
-  final List<String> _times = ['10:00Am', '9:00Am', '5:00Pm', '11:00Am', '9:00Pm'];
+  @override
+  void initState() {
+    super.initState();
+    _fetchSlots();
+  }
+
+  Future<void> _fetchSlots() async {
+    setState(() {
+      _loadingSlots = true;
+      _selectedSlot = null;
+      _availableSlots = [];
+    });
+
+    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate);
+    final slots = await Provider.of<BookingProvider>(
+      context,
+      listen: false,
+    ).getAvailableSlots(widget.stadiumId, dateStr);
+
+    final isToday = dateStr == DateFormat('yyyy-MM-dd').format(DateTime.now());
+    List<Map<String, String>> filteredSlots = slots;
+
+    if (isToday) {
+      final now = DateTime.now();
+      filteredSlots = slots.where((slot) {
+        try {
+          final fromTimeStr = slot['from'];
+          if (fromTimeStr == null) return false;
+          final parts = fromTimeStr.split(':');
+          final hour = int.parse(parts[0]);
+          final minute = int.parse(parts[1]);
+          // Check if the slot start time is in the future
+          final slotTime = DateTime(now.year, now.month, now.day, hour, minute);
+          return slotTime.isAfter(now);
+        } catch (e) {
+          return true;
+        }
+      }).toList();
+    }
+
+    if (mounted) {
+      setState(() {
+        _availableSlots = filteredSlots;
+        _loadingSlots = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,20 +97,27 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Header Image & Overlay Card
+            // 1. Header Image & Info Card
             Stack(
               clipBehavior: Clip.none,
               children: [
-                // Top Image
-                Container(
+                SizedBox(
                   height: 250,
                   width: double.infinity,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      image: NetworkImage(widget.imageUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  child: widget.imageUrl.isNotEmpty
+                      ? Image.network(
+                          widget.imageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (ctx, err, st) => Container(
+                            color: Colors.grey[900],
+                            child: const Icon(
+                              Icons.sports_soccer,
+                              color: Colors.white54,
+                              size: 60,
+                            ),
+                          ),
+                        )
+                      : Container(color: Colors.grey[900]),
                 ),
                 // Back Button
                 SafeArea(
@@ -74,7 +129,7 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                     ),
                   ),
                 ),
-                // Overlay Card
+                // Info Card
                 Positioned(
                   top: 180,
                   left: 20,
@@ -97,42 +152,79 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                       children: [
                         // Sport Pill
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: greenColor.withOpacity(0.8),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
                             widget.sport,
-                            style: const TextStyle(color: Colors.white, fontSize: 12),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
-                        // Stadium Name
                         Text(
                           widget.name,
-                          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        // Info Row
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(widget.location, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
-                            const Text('10-22 player', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
-                            const Text('7 slots available', style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold)),
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_on_outlined,
+                                    color: Colors.white54,
+                                    size: 14,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Expanded(
+                                    child: Text(
+                                      widget.location,
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: widget.price,
+                                    style: TextStyle(
+                                      color: greenColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const TextSpan(
+                                    text: '/hr',
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ],
-                        ),
-                        const SizedBox(height: 12),
-                        // Price
-                        RichText(
-                          text: TextSpan(
-                            style: const TextStyle(fontSize: 16),
-                            children: [
-                              TextSpan(text: widget.price, style: TextStyle(color: greenColor, fontWeight: FontWeight.bold)),
-                              const TextSpan(text: '/hr', style: TextStyle(color: Colors.white70)),
-                            ],
-                          ),
                         ),
                       ],
                     ),
@@ -140,9 +232,8 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                 ),
               ],
             ),
-            
-            // Spacer for overlapping card
-            const SizedBox(height: 110),
+
+            const SizedBox(height: 100),
 
             // 2. Select Day
             Padding(
@@ -152,27 +243,35 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                 children: [
                   const Text(
                     'Select Day',
-                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
                     height: 70,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: _days.length,
+                      itemCount: _nextDays.length,
                       itemBuilder: (context, index) {
-                        bool isSelected = _selectedDayIndex == index;
+                        final day = _nextDays[index];
+                        bool isSelected =
+                            DateFormat('yyyy-MM-dd').format(day) ==
+                            DateFormat('yyyy-MM-dd').format(_selectedDate);
                         return GestureDetector(
                           onTap: () {
-                            setState(() {
-                              _selectedDayIndex = index;
-                            });
+                            setState(() => _selectedDate = day);
+                            _fetchSlots();
                           },
                           child: Container(
                             width: 60,
                             margin: const EdgeInsets.only(right: 12),
                             decoration: BoxDecoration(
-                              color: isSelected ? greenColor : Colors.transparent,
+                              color: isSelected
+                                  ? greenColor
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: greenColor, width: 1),
                             ),
@@ -180,18 +279,20 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  _days[index]['day']!,
+                                  DateFormat('EEE').format(day),
                                   style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white70,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white70,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                    fontSize: 13,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _days[index]['date']!,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.white : Colors.white,
+                                  day.day.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
                                   ),
@@ -208,71 +309,83 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
             ),
             const SizedBox(height: 24),
 
-            // 3. Available Times
+            // 3. Available Slots
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Available Times',
-                    style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    'Available Slots',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start, // Align to top because of dropdowns
-                    children: [
-                      // From Dropdown
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text('From', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            _buildDropdown(
-                              hint: 'select time',
-                              value: _selectedFromTime,
-                              items: _times,
-                              onChanged: (val) {
-                                setState(() {
-                                  _selectedFromTime = val;
-                                });
-                              },
-                              greenColor: greenColor,
-                            ),
-                          ],
+                  if (_loadingSlots)
+                    const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24.0),
+                        child: CircularProgressIndicator(
+                          color: Color(0xFF4C8C18),
                         ),
                       ),
-                      
-                      // Colon Separator
-                      const Padding(
-                        padding: EdgeInsets.only(top: 36.0, left: 8, right: 8),
-                        child: Text(':', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                    )
+                  else if (_availableSlots.isEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2C2C2C),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-
-                      // To Dropdown
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            const Text('To', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            _buildDropdown(
-                              hint: 'select time',
-                              value: _selectedToTime,
-                              items: _times,
-                              onChanged: (val) {
-                                setState(() {
-                                  _selectedToTime = val;
-                                });
-                              },
-                              greenColor: greenColor,
-                            ),
-                          ],
+                      child: const Center(
+                        child: Text(
+                          'No available slots for this day',
+                          style: TextStyle(color: Colors.white70, fontSize: 14),
                         ),
                       ),
-                    ],
-                  ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: _availableSlots.map((slot) {
+                        final label = '${slot['from']} → ${slot['to']}';
+                        final isSelected =
+                            _selectedSlot != null &&
+                            _selectedSlot!['from'] == slot['from'] &&
+                            _selectedSlot!['to'] == slot['to'];
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedSlot = slot),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? greenColor
+                                  : const Color(0xFF2C2C2C),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: greenColor, width: 1),
+                            ),
+                            child: Text(
+                              label,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.white70,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
                 ],
               ),
             ),
@@ -281,76 +394,99 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
             // 4. Book Now Button
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Ticket Screen
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TicketScreen(
-                          stadiumName: widget.name,
-                          date: '12-2-2026', // Mock data
-                          time: 'From ' + (_selectedFromTime ?? '10:00Am') + ' To ' + (_selectedToTime ?? '12:00Am'),
-                          location: widget.location,
-                          totalPrice: widget.price,
-                          duration: '2hr',
-                          sport: widget.sport,
-                          qrData: 'BOOKING_QR_DATA_MOCK',
+              child: Consumer<BookingProvider>(
+                builder: (context, bookingProvider, child) {
+                  final canBook =
+                      !bookingProvider.isLoading && _selectedSlot != null;
+
+                  return SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: canBook
+                          ? () async {
+                              final stadium = StadiumModel(
+                                id: widget.stadiumId,
+                                name: widget.name,
+                                location: widget.location,
+                                price: widget.price,
+                                imageUrl: widget.imageUrl,
+                                sport: widget.sport,
+                                rating: 0.0,
+                              );
+
+                              final fromTime = _selectedSlot!['from']!;
+                              final toTime = _selectedSlot!['to']!;
+
+                              final success = await bookingProvider
+                                  .createBooking(
+                                    stadium,
+                                    _selectedDate,
+                                    fromTime,
+                                    toTime,
+                                  );
+
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      success
+                                          ? '✅ Booking confirmed!'
+                                          : '❌ Booking failed. Please try again.',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    backgroundColor: success
+                                        ? greenColor
+                                        : Colors.red,
+                                  ),
+                                );
+                                if (success) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const MyBookingsScreen(),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: greenColor,
+                        disabledBackgroundColor: greenColor.withOpacity(0.4),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: greenColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      child: bookingProvider.isLoading
+                          ? const SizedBox(
+                              height: 24,
+                              width: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 3,
+                              ),
+                            )
+                          : Text(
+                              _selectedSlot == null
+                                  ? 'Select a slot to book'
+                                  : 'Book Now — ${_selectedSlot!['from']} to ${_selectedSlot!['to']}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                     ),
-                  ),
-                  child: const Text(
-                    'Book Now',
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 50),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdown({
-    required String hint,
-    required String? value,
-    required List<String> items,
-    required void Function(String?) onChanged,
-    required Color greenColor,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E1E1E), // Darker background to match the list box in image
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          hint: Text(hint, style: const TextStyle(color: Colors.white)),
-          isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white),
-          dropdownColor: const Color(0xFF2C2C2C),
-          items: items.map((String time) {
-            return DropdownMenuItem<String>(
-              value: time,
-              child: Text(time, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-            );
-          }).toList(),
-          onChanged: onChanged,
         ),
       ),
     );

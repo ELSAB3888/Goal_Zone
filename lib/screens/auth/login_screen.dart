@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../core/providers/auth_provider.dart';
 import '../../widgets/main_layout.dart';
 import 'signup_screen.dart';
 import 'forgot_password_screen.dart';
+import 'confirm_social_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void dispose() {
+    _phoneController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,20 +53,22 @@ class _LoginScreenState extends State<LoginScreen> {
               const Text(
                 'Sign in to continue',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white70, fontSize: 16),
               ),
               const SizedBox(height: 50),
 
               // Phone Number Field
               TextField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Phone number',
                   hintStyle: const TextStyle(color: Colors.white54),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: greenColor, width: 1),
@@ -69,15 +83,21 @@ class _LoginScreenState extends State<LoginScreen> {
 
               // Password Field
               TextField(
+                controller: _passwordController,
                 obscureText: _obscurePassword,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Password',
                   hintStyle: const TextStyle(color: Colors.white54),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white54,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscurePassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: Colors.white54,
                     ),
                     onPressed: () {
@@ -86,7 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       });
                     },
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: greenColor, width: 1),
@@ -106,7 +129,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordScreen(),
+                      ),
                     );
                   },
                   child: Text(
@@ -118,29 +143,82 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
 
               // Login Button
-              ElevatedButton(
-                onPressed: () {
-                  // Navigate to Home
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MainLayout()),
+              Consumer<AuthProvider>(
+                builder: (context, authProvider, child) {
+                  return ElevatedButton(
+                    onPressed: authProvider.isLoading
+                        ? null
+                        : () async {
+                            final phone = _phoneController.text.trim();
+                            final password = _passwordController.text;
+
+                            if (phone.isEmpty || password.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Please fill all fields',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
+
+                            final success = await authProvider.login(
+                              phone,
+                              password,
+                            );
+
+                            if (success) {
+                              if (context.mounted) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const MainLayout(),
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Invalid credentials',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: greenColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: authProvider.isLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
                   );
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: greenColor,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Login',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
               ),
               const SizedBox(height: 40),
 
@@ -164,14 +242,107 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildSocialIcon(Icons.g_mobiledata, Colors.red, size: 40),
+                  InkWell(
+                    onTap: () async {
+                      final authProvider = Provider.of<AuthProvider>(
+                        context,
+                        listen: false,
+                      );
+                      final result = await authProvider.signInWithGoogle();
+                      if (result != null && context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ConfirmSocialPasswordScreen(
+                              email: result['email'] ?? '',
+                            ),
+                          ),
+                        );
+                      } else if (context.mounted && !authProvider.isLoading) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Google Sign-In failed. Please check your Firebase SHA-1 configuration.',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(25),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.transparent,
+                      ),
+                      child: Center(
+                        child: Image.network(
+                          'https://img.icons8.com/color/48/000000/google-logo.png',
+                          width: 24,
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
+                                Icons.g_mobiledata,
+                                color: Colors.white,
+                                size: 40,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 24),
-                  _buildSocialIcon(Icons.facebook, Colors.blue),
+                  InkWell(
+                    onTap: () async {
+                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+                      final result = await authProvider.signInWithFacebook();
+                      if (result != null && context.mounted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ConfirmSocialPasswordScreen(
+                              email: result['email'] ?? '',
+                            ),
+                          ),
+                        );
+                      } else if (context.mounted && !authProvider.isLoading) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Facebook Sign-In failed. Please try again.',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(25),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.transparent,
+                      ),
+                      child: Center(
+                        child: Image.network(
+                          'https://img.icons8.com/color/48/000000/facebook-new.png',
+                          width: 24,
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.facebook, color: Colors.blue, size: 32),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 24),
                   _buildSocialIcon(Icons.apple, Colors.white),
                 ],
               ),
-              
+
               const SizedBox(height: 40),
 
               // Sign Up Link
@@ -186,7 +357,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SignupScreen(),
+                        ),
                       );
                     },
                     child: Text(

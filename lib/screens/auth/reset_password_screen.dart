@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({Key? key}) : super(key: key);
+  const ResetPasswordScreen({super.key});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -62,10 +62,15 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 decoration: InputDecoration(
                   hintText: 'New Password',
                   hintStyle: const TextStyle(color: Colors.white54),
-                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white54,
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureNewPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscureNewPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: Colors.white54,
                     ),
                     onPressed: () {
@@ -74,7 +79,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       });
                     },
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: greenColor, width: 1),
@@ -97,7 +105,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   // No prefix icon as per the image
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                      _obscureConfirmPassword
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
                       color: Colors.white54,
                     ),
                     onPressed: () {
@@ -106,7 +116,10 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                       });
                     },
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: greenColor, width: 1),
@@ -124,7 +137,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                 onPressed: () {
                   Navigator.pushAndRemoveUntil(
                     context,
-                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                    MaterialPageRoute(
+                      builder: (context) => const LoginScreen(),
+                    ),
                     (route) => false,
                   );
                 },
