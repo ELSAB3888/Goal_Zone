@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:screenshot/screenshot.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/providers/booking_provider.dart';
+import '../../core/utils/ticket_downloader.dart';
 
-class TicketScreen extends StatelessWidget {
+class TicketScreen extends StatefulWidget {
   final String stadiumName;
   final String date;
   final String time;
@@ -10,6 +15,8 @@ class TicketScreen extends StatelessWidget {
   final String duration;
   final String sport;
   final String qrData;
+  /// Optional: the booking ID to fetch qrToken from API if qrData is unavailable
+  final String? bookingId;
 
   const TicketScreen({
     super.key,
@@ -21,20 +28,61 @@ class TicketScreen extends StatelessWidget {
     required this.duration,
     required this.sport,
     required this.qrData,
+    this.bookingId,
   });
 
   @override
+  State<TicketScreen> createState() => _TicketScreenState();
+}
+
+class _TicketScreenState extends State<TicketScreen> {
+  late String _resolvedQrData;
+  bool _loadingQr = false;
+  bool _downloading = false;
+  final ScreenshotController _screenshotController = ScreenshotController();
+
+  @override
+  void initState() {
+    super.initState();
+    _resolvedQrData = widget.qrData;
+    // If qrData is not usable, try fetching from API
+    if ((_resolvedQrData.isEmpty || _resolvedQrData == 'NO_QR') &&
+        widget.bookingId != null) {
+      _fetchQrFromApi();
+    }
+  }
+
+  Future<void> _fetchQrFromApi() async {
+    setState(() => _loadingQr = true);
+    try {
+      final provider = Provider.of<BookingProvider>(context, listen: false);
+      final token = await provider.getBookingQrToken(widget.bookingId!);
+      if (mounted) {
+        setState(() {
+          _resolvedQrData = token;
+          _loadingQr = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingQr = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
-    final cardColor = const Color(0xFF2C2C2C);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
+    const cardColor = Color(0xFF2C2C2C);
 
     return Scaffold(
       backgroundColor: darkBg,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // 1. Header Image & Ticket Card
+      body: Screenshot(
+        controller: _screenshotController,
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // 1. Header Image & Ticket Card
+
             Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.topCenter,
@@ -81,7 +129,7 @@ class TicketScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.3),
+                        color: Colors.black.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 5),
                       ),
@@ -96,11 +144,11 @@ class TicketScreen extends StatelessWidget {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: greenColor.withOpacity(0.8),
+                          color: greenColor.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          sport,
+                          widget.sport,
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
@@ -110,7 +158,7 @@ class TicketScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       // Stadium Name
                       Text(
-                        stadiumName,
+                        widget.stadiumName,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 22,
@@ -125,15 +173,15 @@ class TicketScreen extends StatelessWidget {
                       _buildDetailRow(
                         Icons.calendar_today_outlined,
                         'Date:',
-                        date,
+                        widget.date,
                       ),
                       const SizedBox(height: 16),
-                      _buildDetailRow(Icons.access_time, 'Time:', time),
+                      _buildDetailRow(Icons.access_time, 'Time:', widget.time),
                       const SizedBox(height: 16),
                       _buildDetailRow(
                         Icons.location_on_outlined,
                         'Location:',
-                        location,
+                        widget.location,
                       ),
 
                       const SizedBox(height: 20),
@@ -157,14 +205,14 @@ class TicketScreen extends StatelessWidget {
                               style: const TextStyle(fontSize: 16),
                               children: [
                                 TextSpan(
-                                  text: totalPrice,
+                                  text: widget.totalPrice,
                                   style: TextStyle(
                                     color: greenColor,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '/\$duration',
+                                  text: '/${widget.duration}',
                                   style: const TextStyle(color: Colors.white),
                                 ),
                               ],
@@ -228,16 +276,30 @@ class TicketScreen extends StatelessWidget {
                             ),
                           ),
                           // QR Code
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            color: Colors.white,
-                            child: QrImageView(
-                              data: qrData,
-                              version: QrVersions.auto,
-                              size: 150.0,
-                              backgroundColor: Colors.white,
-                            ),
-                          ),
+                          _loadingQr
+                              ? Container(
+                                  padding: const EdgeInsets.all(8),
+                                  color: Colors.white,
+                                  width: 166,
+                                  height: 166,
+                                  child: const Center(
+                                    child: CircularProgressIndicator(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.all(8),
+                                  color: Colors.white,
+                                  child: QrImageView(
+                                    data: _resolvedQrData.isNotEmpty
+                                        ? _resolvedQrData
+                                        : 'NO_QR',
+                                    version: QrVersions.auto,
+                                    size: 150.0,
+                                    backgroundColor: Colors.white,
+                                  ),
+                                ),
                         ],
                       ),
                     ],
@@ -255,21 +317,77 @@ class TicketScreen extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: greenColor, width: 1),
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: const Text(
-                        'Download Ticket',
-                        style: TextStyle(
+                    child: OutlinedButton.icon(
+                      onPressed: _downloading
+                          ? null
+                          : () async {
+                              setState(() => _downloading = true);
+                              // Capture messenger before async gap
+                              final messenger =
+                                  ScaffoldMessenger.of(context);
+                              final success =
+                                  await TicketDownloader.renderAndDownload(
+                                qrData: _resolvedQrData,
+                                stadiumName: widget.stadiumName,
+                                date: widget.date,
+                                time: widget.time,
+                                location: widget.location,
+                                totalPrice: widget.totalPrice,
+                                sport: widget.sport,
+                                fileName:
+                                    'GoalZone_${widget.stadiumName.replaceAll(' ', '_')}',
+                              );
+                              if (mounted) {
+                                setState(() => _downloading = false);
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      success
+                                          ? '✅ Ticket saved to gallery!'
+                                          : '❌ Download failed. Please try again.',
+                                      style: const TextStyle(
+                                          color: Colors.white),
+                                    ),
+                                    backgroundColor: success
+                                        ? const Color(0xFF2E7D32)
+                                        : Colors.red,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius:
+                                          BorderRadius.circular(10),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                      icon: _downloading
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.download_rounded,
+                              color: Colors.white,
+                            ),
+                      label: Text(
+                        _downloading ? 'Saving...' : 'Download Ticket',
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(
+                            color: AppColors.primary, width: 1),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
@@ -307,9 +425,12 @@ class TicketScreen extends StatelessWidget {
             const SizedBox(height: 40),
           ],
         ),
-      ),
-    );
+      ),    // SingleChildScrollView
+    ),      // Screenshot
+    );      // Scaffold
   }
+
+
 
   Widget _buildDetailRow(IconData icon, String label, String value) {
     return Row(

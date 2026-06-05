@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../widgets/main_layout.dart';
-import 'signup_screen.dart';
-import 'forgot_password_screen.dart';
 import 'confirm_social_password_screen.dart';
+import 'forgot_password_screen.dart';
+import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,371 +27,366 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _onLoginPressed(AuthProvider authProvider) async {
+    final phone = _phoneController.text.trim();
+    final password = _passwordController.text;
+
+    if (phone.isEmpty || password.isEmpty) {
+      _showSnackBar('Please fill all fields');
+      return;
+    }
+
+    final success = await authProvider.login(phone, password);
+
+    if (!mounted) return;
+    if (success) {
+      _goToHome();
+    } else {
+      _showSnackBar('Invalid credentials');
+    }
+  }
+
+  Future<void> _onGoogleSignInPressed() async {
+    final authProvider = context.read<AuthProvider>();
+    final result = await authProvider.signInWithGoogle();
+
+    if (!mounted) return;
+    if (result != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ConfirmSocialPasswordScreen(email: result['email'] ?? ''),
+        ),
+      );
+    } else if (!authProvider.isLoading) {
+      _showSnackBar(
+        'Google Sign-In failed. Please check your Firebase SHA-1 configuration.',
+      );
+    }
+  }
+
+  void _togglePasswordVisibility() =>
+      setState(() => _obscurePassword = !_obscurePassword);
+
+  void _goToHome() => Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (_) => const MainLayout()),
+  );
+
+  void _goToSignup() => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const SignupScreen()),
+  );
+
+  void _goToForgotPassword() => Navigator.push(
+    context,
+    MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+  );
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(color: Colors.white)),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
-
     return Scaffold(
-      backgroundColor: darkBg,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 40),
-              // Welcome Text
-              Text(
-                'Welcome Back',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: greenColor,
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Sign in to continue',
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
-              ),
+              _LoginHeader(),
               const SizedBox(height: 50),
-
-              // Phone Number Field
-              TextField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Phone number',
-                  hintStyle: const TextStyle(color: Colors.white54),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: greenColor, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: greenColor, width: 2),
-                  ),
-                ),
-              ),
+              _PhoneField(controller: _phoneController),
               const SizedBox(height: 20),
-
-              // Password Field
-              TextField(
+              _PasswordField(
                 controller: _passwordController,
-                obscureText: _obscurePassword,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  hintStyle: const TextStyle(color: Colors.white54),
-                  prefixIcon: const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white54,
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
-                      color: Colors.white54,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: greenColor, width: 1),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: greenColor, width: 2),
-                  ),
-                ),
+                obscure: _obscurePassword,
+                onToggle: _togglePasswordVisibility,
               ),
               const SizedBox(height: 12),
-
-              // Forget Password Link
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const ForgotPasswordScreen(),
-                      ),
-                    );
-                  },
-                  child: Text(
-                    'Forget password?',
-                    style: TextStyle(color: greenColor),
-                  ),
-                ),
-              ),
+              _ForgotPasswordButton(onPressed: _goToForgotPassword),
               const SizedBox(height: 24),
-
-              // Login Button
-              Consumer<AuthProvider>(
-                builder: (context, authProvider, child) {
-                  return ElevatedButton(
-                    onPressed: authProvider.isLoading
-                        ? null
-                        : () async {
-                            final phone = _phoneController.text.trim();
-                            final password = _passwordController.text;
-
-                            if (phone.isEmpty || password.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Please fill all fields',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                              return;
-                            }
-
-                            final success = await authProvider.login(
-                              phone,
-                              password,
-                            );
-
-                            if (success) {
-                              if (context.mounted) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const MainLayout(),
-                                  ),
-                                );
-                              }
-                            } else {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Invalid credentials',
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                    backgroundColor: Colors.red,
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: greenColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                  );
-                },
-              ),
+              _LoginButton(onLoginPressed: _onLoginPressed),
               const SizedBox(height: 40),
-
-              // Divider "or continue with"
-              Row(
-                children: [
-                  Expanded(child: Divider(color: greenColor, thickness: 1)),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      'or continue with',
-                      style: TextStyle(color: greenColor, fontSize: 14),
-                    ),
-                  ),
-                  Expanded(child: Divider(color: greenColor, thickness: 1)),
-                ],
-              ),
+              _OrDivider(),
               const SizedBox(height: 30),
-
-              // Social Login Icons Placeholder
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      final authProvider = Provider.of<AuthProvider>(
-                        context,
-                        listen: false,
-                      );
-                      final result = await authProvider.signInWithGoogle();
-                      if (result != null && context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ConfirmSocialPasswordScreen(
-                              email: result['email'] ?? '',
-                            ),
-                          ),
-                        );
-                      } else if (context.mounted && !authProvider.isLoading) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Google Sign-In failed. Please check your Firebase SHA-1 configuration.',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(25),
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.transparent,
-                      ),
-                      child: Center(
-                        child: Image.network(
-                          'https://img.icons8.com/color/48/000000/google-logo.png',
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(
-                                Icons.g_mobiledata,
-                                color: Colors.white,
-                                size: 40,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  InkWell(
-                    onTap: () async {
-                      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-                      final result = await authProvider.signInWithFacebook();
-                      if (result != null && context.mounted) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ConfirmSocialPasswordScreen(
-                              email: result['email'] ?? '',
-                            ),
-                          ),
-                        );
-                      } else if (context.mounted && !authProvider.isLoading) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Facebook Sign-In failed. Please try again.',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    borderRadius: BorderRadius.circular(25),
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.transparent,
-                      ),
-                      child: Center(
-                        child: Image.network(
-                          'https://img.icons8.com/color/48/000000/facebook-new.png',
-                          width: 24,
-                          height: 24,
-                          errorBuilder: (context, error, stackTrace) =>
-                              const Icon(Icons.facebook, color: Colors.blue, size: 32),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 24),
-                  _buildSocialIcon(Icons.apple, Colors.white),
-                ],
-              ),
-
+              _SocialLoginRow(onGooglePressed: _onGoogleSignInPressed),
               const SizedBox(height: 40),
-
-              // Sign Up Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Don't have an account ? ",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SignupScreen(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      'Sign up',
-                      style: TextStyle(
-                        color: greenColor,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _SignUpRow(onSignUpPressed: _goToSignup),
             ],
           ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildSocialIcon(IconData icon, Color color, {double size = 32}) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.transparent,
-      ),
-      child: Center(
-        child: Icon(icon, color: color, size: size),
+class _LoginHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Column(
+      children: [
+        Text(
+          'Welcome Back',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: AppColors.primary,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Sign in to continue',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white70, fontSize: 16),
+        ),
+      ],
+    );
+  }
+}
+
+class _PhoneField extends StatelessWidget {
+  const _PhoneField({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.phone,
+      style: const TextStyle(color: Colors.white),
+      decoration: _inputDecoration(hintText: 'Phone number'),
+    );
+  }
+}
+
+class _PasswordField extends StatelessWidget {
+  const _PasswordField({
+    required this.controller,
+    required this.obscure,
+    required this.onToggle,
+  });
+
+  final TextEditingController controller;
+  final bool obscure;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      obscureText: obscure,
+      style: const TextStyle(color: Colors.white),
+      decoration: _inputDecoration(
+        hintText: 'Password',
+        prefixIcon: const Icon(Icons.lock_outline, color: Colors.white54),
+        suffixIcon: IconButton(
+          icon: Icon(
+            obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+            color: Colors.white54,
+          ),
+          onPressed: onToggle,
+        ),
       ),
     );
   }
+}
+
+class _ForgotPasswordButton extends StatelessWidget {
+  const _ForgotPasswordButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: TextButton(
+        onPressed: onPressed,
+        child: const Text(
+          'Forget password?',
+          style: TextStyle(color: AppColors.primary),
+        ),
+      ),
+    );
+  }
+}
+
+class _LoginButton extends StatelessWidget {
+  const _LoginButton({required this.onLoginPressed});
+  final Future<void> Function(AuthProvider) onLoginPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (_, authProvider, _) => ElevatedButton(
+        onPressed: authProvider.isLoading
+            ? null
+            : () => onLoginPressed(authProvider),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: authProvider.isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : const Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _OrDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Expanded(child: Divider(color: AppColors.primary, thickness: 1)),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            'or continue with',
+            style: TextStyle(color: AppColors.primary, fontSize: 14),
+          ),
+        ),
+        Expanded(child: Divider(color: AppColors.primary, thickness: 1)),
+      ],
+    );
+  }
+}
+
+class _SocialLoginRow extends StatelessWidget {
+  const _SocialLoginRow({required this.onGooglePressed});
+  final VoidCallback onGooglePressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _GoogleSignInButton(onPressed: onGooglePressed),
+        const SizedBox(width: 24),
+        _SocialIconButton(icon: Icons.facebook, color: Colors.blue),
+        const SizedBox(width: 24),
+        _SocialIconButton(icon: Icons.apple, color: Colors.white),
+      ],
+    );
+  }
+}
+
+class _GoogleSignInButton extends StatelessWidget {
+  const _GoogleSignInButton({required this.onPressed});
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(25),
+      child: SizedBox(
+        width: 50,
+        height: 50,
+        child: Center(
+          child: Image.network(
+            'https://img.icons8.com/color/48/000000/google-logo.png',
+            width: 24,
+            height: 24,
+            errorBuilder: (_, _, _) =>
+                const Icon(Icons.g_mobiledata, color: Colors.white, size: 40),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialIconButton extends StatelessWidget {
+  const _SocialIconButton({required this.icon, required this.color});
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 50,
+      height: 50,
+      child: Center(child: Icon(icon, color: color, size: 32)),
+    );
+  }
+}
+
+class _SignUpRow extends StatelessWidget {
+  const _SignUpRow({required this.onSignUpPressed});
+  final VoidCallback onSignUpPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          "Don't have an account ? ",
+          style: TextStyle(color: Colors.white),
+        ),
+        GestureDetector(
+          onTap: onSignUpPressed,
+          child: const Text(
+            'Sign up',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+InputDecoration _inputDecoration({
+  required String hintText,
+  Widget? prefixIcon,
+  Widget? suffixIcon,
+}) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: const TextStyle(color: Colors.white54),
+    prefixIcon: prefixIcon,
+    suffixIcon: suffixIcon,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: AppColors.primary, width: 1),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: AppColors.primary, width: 2),
+    ),
+  );
 }

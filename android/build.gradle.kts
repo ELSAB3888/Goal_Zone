@@ -26,3 +26,26 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+subprojects {
+    val configureProject = { proj: Project ->
+        if (proj.hasProperty("android")) {
+            proj.extensions.findByType<com.android.build.gradle.BaseExtension>()?.let { androidExt ->
+                if (androidExt.namespace.isNullOrBlank()) {
+                    androidExt.namespace = proj.group.toString()
+                }
+            }
+        }
+    }
+    if (state.executed) {
+        configureProject(this)
+    } else {
+        afterEvaluate {
+            configureProject(this)
+        }
+    }
+}
+
+
+
+

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 class FilterScreen extends StatefulWidget {
   const FilterScreen({super.key});
@@ -29,8 +30,8 @@ class _FilterScreenState extends State<FilterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -85,7 +86,7 @@ class _FilterScreenState extends State<FilterScreen> {
                       color: const Color(0xFF2C2C2C),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: greenColor.withOpacity(0.5),
+                        color: greenColor.withValues(alpha: 0.5),
                         width: 1,
                       ),
                     ),
@@ -99,7 +100,7 @@ class _FilterScreenState extends State<FilterScreen> {
                             color: const Color(0xFF1E1E1E),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: greenColor.withOpacity(0.5),
+                              color: greenColor.withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),
@@ -134,7 +135,7 @@ class _FilterScreenState extends State<FilterScreen> {
                                 color: const Color(0xFF1E1E1E),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: greenColor.withOpacity(0.5),
+                                  color: greenColor.withValues(alpha: 0.5),
                                   width: 1,
                                 ),
                               ),

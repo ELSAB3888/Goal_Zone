@@ -5,7 +5,7 @@ import '../../core/providers/navigation_provider.dart';
 import '../../core/providers/stadium_provider.dart';
 import '../../core/providers/auth_provider.dart';
 import 'notifications_screen.dart';
-import '../court/filter_screen.dart';
+import '../../core/constants/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -20,8 +20,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     final stadiumProvider = Provider.of<StadiumProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
@@ -38,13 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // 1. Header (User Info & Notification)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
-                        // Logo Placeholder
                         Container(
                           width: 40,
                           height: 40,
@@ -148,7 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(16),
                         gradient: LinearGradient(
                           colors: [
-                            Colors.black.withOpacity(0.8),
+                            Colors.black.withValues(alpha: 0.8),
                             Colors.transparent,
                           ],
                           begin: Alignment.centerLeft,
@@ -254,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide(
-                              color: greenColor.withOpacity(0.5),
+                              color: greenColor.withValues(alpha: 0.5),
                               width: 1,
                             ),
                           ),
@@ -266,25 +264,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const FilterScreen(),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: greenColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Icon(Icons.tune, color: Colors.white),
-                      ),
-                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -324,7 +303,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Padding(
                       padding: EdgeInsets.all(40.0),
                       child: CircularProgressIndicator(
-                        color: Color(0xFF4C8C18),
+                        color: AppColors.primary,
                       ),
                     ),
                   )
@@ -384,7 +363,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   '$title Coming Soon!',
                   style: const TextStyle(color: Colors.white),
                 ),
-                backgroundColor: const Color(0xFF4C8C18),
+                backgroundColor: AppColors.primary,
                 duration: const Duration(seconds: 2),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -409,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: Colors.grey[900],
                   child: const Icon(
                     Icons.broken_image,
-                    color: Color(0xFF4C8C18),
+                    color: AppColors.primary,
                   ),
                 ),
               ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/providers/locale_provider.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -7,8 +8,8 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -84,7 +85,7 @@ class SettingsScreen extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF1E1E1E),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+          border: Border.all(color: greenColor.withValues(alpha: 0.5), width: 1),
         ),
         child: Row(
           children: [

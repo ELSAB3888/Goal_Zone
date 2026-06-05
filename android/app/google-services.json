@@ -14,11 +14,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "635094965396-hns606tqgsc9hd4eh5dkjqcl2ncuc1d6.apps.googleusercontent.com",
+          "client_id": "635094965396-i7i7ljbocp2ngvo7qvq83oglpvomcgrg.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.antigravity.sportsbooking.sports_booking_app",
-            "certificate_hash": "3d5737ed6d30a74b1c7fe249699f7a302ff2adf5"
+            "certificate_hash": "1ceaa83621343924234b574415da60fa1b9100a9"
           }
         },
         {

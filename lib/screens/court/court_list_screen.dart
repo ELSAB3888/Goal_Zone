@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../widgets/stadium_card.dart';
 import '../../core/providers/navigation_provider.dart';
 import '../../core/providers/stadium_provider.dart';
-import 'filter_screen.dart';
+import '../../core/constants/app_colors.dart';
 
 class CourtListScreen extends StatefulWidget {
   const CourtListScreen({super.key});
@@ -25,8 +25,8 @@ class _CourtListScreenState extends State<CourtListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
     final navProvider = Provider.of<NavigationProvider>(context);
 
     final stadiumProvider = Provider.of<StadiumProvider>(context);
@@ -93,7 +93,7 @@ class _CourtListScreenState extends State<CourtListScreen> {
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                               borderSide: BorderSide(
-                                color: greenColor.withOpacity(0.5),
+                                color: greenColor.withValues(alpha: 0.5),
                                 width: 1,
                               ),
                             ),
@@ -108,25 +108,6 @@ class _CourtListScreenState extends State<CourtListScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const FilterScreen(),
-                            ),
-                          );
-                        },
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: greenColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.tune, color: Colors.white),
-                        ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: 20),

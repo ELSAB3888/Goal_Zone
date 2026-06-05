@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../core/providers/booking_provider.dart';
-import '../../core/models/booking_model.dart';
 import 'package:intl/intl.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/models/booking_model.dart';
+import '../../core/providers/booking_provider.dart';
+import '../../core/utils/ticket_downloader.dart';
 
 class MyBookingsScreen extends StatefulWidget {
   const MyBookingsScreen({super.key});
@@ -28,8 +30,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -95,7 +97,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                           child: Padding(
                             padding: EdgeInsets.all(40.0),
                             child: CircularProgressIndicator(
-                              color: Color(0xFF4C8C18),
+                              color: AppColors.primary,
                             ),
                           ),
                         );
@@ -118,7 +120,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                               children: [
                                 Icon(
                                   Icons.sports_soccer,
-                                  color: greenColor.withOpacity(0.4),
+                                  color: greenColor.withValues(alpha: 0.4),
                                   size: 64,
                                 ),
                                 const SizedBox(height: 16),
@@ -214,7 +216,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+        border: Border.all(color: greenColor.withValues(alpha: 0.5), width: 1),
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -257,7 +259,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: greenColor.withOpacity(0.8),
+                            color: greenColor.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -459,7 +461,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+        border: Border.all(color: greenColor.withValues(alpha: 0.5), width: 1),
       ),
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -494,7 +496,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: greenColor.withOpacity(0.8),
+                        color: greenColor.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -580,7 +582,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFF2C2C2C),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: greenColor.withOpacity(0.5), width: 1),
+        border: Border.all(color: greenColor.withValues(alpha: 0.5), width: 1),
       ),
       padding: const EdgeInsets.all(12),
       child: Row(
@@ -615,7 +617,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: greenColor.withOpacity(0.8),
+                        color: greenColor.withValues(alpha: 0.8),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -709,17 +711,135 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   ) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF2C2C2C),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          'Booking QR Code',
-          textAlign: TextAlign.center,
-          style: TextStyle(color: greenColor, fontWeight: FontWeight.bold),
+      builder: (ctx) => _QRDialog(
+        booking: booking,
+        greenColor: greenColor,
+      ),
+    );
+  }
+}
+
+// ─── QR Dialog with API fetch ─────────────────────────────────────────────────
+class _QRDialog extends StatefulWidget {
+  final BookingModel booking;
+  final Color greenColor;
+
+  const _QRDialog({required this.booking, required this.greenColor});
+
+  @override
+  State<_QRDialog> createState() => _QRDialogState();
+}
+
+class _QRDialogState extends State<_QRDialog> {
+  String? _qrToken;
+  bool _loading = true;
+  bool _error = false;
+  bool _downloading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchQrToken();
+  }
+
+  Future<void> _fetchQrToken() async {
+    try {
+      final provider = Provider.of<BookingProvider>(context, listen: false);
+      // First check if we already have a valid qrToken locally
+      if (widget.booking.qrCodeData.isNotEmpty &&
+          widget.booking.qrCodeData != 'NO_QR') {
+        if (mounted) {
+          setState(() {
+            _qrToken = widget.booking.qrCodeData;
+            _loading = false;
+          });
+        }
+        return;
+      }
+      // Otherwise, fetch from API
+      final token = await provider.getBookingQrToken(widget.booking.id);
+      if (mounted) {
+        setState(() {
+          _qrToken = token;
+          _loading = false;
+          _error = token == 'NO_QR';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: const Color(0xFF2C2C2C),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        'Booking QR Code',
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          color: widget.greenColor,
+          fontWeight: FontWeight.bold,
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_loading)
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: widget.greenColor),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Loading QR Code...',
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (_error || _qrToken == null)
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline,
+                        color: Colors.redAccent, size: 48),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Could not load QR code.\nPlease try again.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white70, fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _loading = true;
+                          _error = false;
+                        });
+                        _fetchQrToken();
+                      },
+                      child: Text('Retry',
+                          style: TextStyle(color: widget.greenColor)),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -727,14 +847,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: QrImageView(
-                data: booking.qrCodeData,
+                data: _qrToken!,
                 version: QrVersions.auto,
                 size: 200.0,
               ),
             ),
             const SizedBox(height: 20),
             Text(
-              booking.stadium.name,
+              widget.booking.stadium.name,
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -743,26 +863,106 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              '${DateFormat('dd MMM yyyy').format(booking.date)} | ${booking.timeSlot}',
+              '${DateFormat('dd MMM yyyy').format(widget.booking.date)} | ${widget.booking.timeSlot}',
               style: const TextStyle(color: Colors.white70, fontSize: 14),
             ),
             const SizedBox(height: 12),
-            Text(
-              'Token: ${booking.qrCodeData}',
-              style: const TextStyle(color: Colors.white54, fontSize: 10),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                'Token: $_qrToken',
+                style:
+                    const TextStyle(color: Colors.white54, fontSize: 10),
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Close',
-              style: TextStyle(color: greenColor, fontWeight: FontWeight.bold),
-            ),
-          ),
         ],
       ),
+      actions: [
+        if (!_loading && !_error && _qrToken != null)
+          TextButton.icon(
+            onPressed: _downloading
+                ? null
+                : () async {
+                    setState(() => _downloading = true);
+                    final booking = widget.booking;
+                    final dateStr = DateFormat('dd MMM yyyy')
+                        .format(booking.date);
+                    // Capture navigator & messenger before async gap
+                    final navigator = Navigator.of(context);
+                    final messenger = ScaffoldMessenger.of(context);
+                    final success =
+                        await TicketDownloader.renderAndDownload(
+                      qrData: _qrToken!,
+                      stadiumName: booking.stadium.name,
+                      date: dateStr,
+                      time: booking.timeSlot,
+                      location: booking.stadium.location,
+                      totalPrice: '${booking.totalPrice.toInt()} EGP',
+                      sport: booking.stadium.sport,
+                      fileName:
+                          'GoalZone_${booking.stadium.name.replaceAll(' ', '_')}',
+                    );
+                    if (mounted) {
+                      setState(() => _downloading = false);
+                      navigator.pop();
+                      messenger.showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            success
+                                ? '✅ Ticket saved to gallery!'
+                                : '❌ Download failed. Please try again.',
+                            style:
+                                const TextStyle(color: Colors.white),
+                          ),
+                          backgroundColor: success
+                              ? const Color(0xFF2E7D32)
+                              : Colors.red,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
+                    }
+                  },
+
+            icon: _downloading
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : Icon(Icons.download_rounded,
+                    color: widget.greenColor, size: 20),
+            label: Text(
+              _downloading ? 'Saving...' : 'Download',
+              style: TextStyle(
+                color: widget.greenColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            'Close',
+            style: TextStyle(
+              color: widget.greenColor,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

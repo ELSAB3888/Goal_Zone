@@ -259,5 +259,6 @@ class _MainLayoutState extends State<MainLayout> {
 }
 ''');
 
+  // ignore: avoid_print
   print('Providers and Models generated successfully!');
 }

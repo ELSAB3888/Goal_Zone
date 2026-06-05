@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 import '../../core/providers/navigation_provider.dart';
 import '../auth/login_screen.dart';
@@ -13,11 +14,9 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
-    final containerBg = const Color(
-      0xFF25331C,
-    ); // Dark greenish tint from the image
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
+    const containerBg = Color(0xFF25331C);
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -49,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: greenColor.withOpacity(0.2),
+                          color: greenColor.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                           border: Border.all(color: greenColor, width: 2),
                         ),
@@ -127,7 +126,7 @@ class ProfileScreen extends StatelessWidget {
                     color: containerBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: greenColor.withOpacity(0.5),
+                      color: greenColor.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
@@ -146,7 +145,7 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                       Divider(
-                        color: greenColor.withOpacity(0.3),
+                        color: greenColor.withValues(alpha: 0.3),
                         height: 1,
                         indent: 16,
                         endIndent: 16,
@@ -174,7 +173,7 @@ class ProfileScreen extends StatelessWidget {
                     color: containerBg,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: greenColor.withOpacity(0.5),
+                      color: greenColor.withValues(alpha: 0.5),
                       width: 1,
                     ),
                   ),
@@ -243,7 +242,7 @@ class ProfileScreen extends StatelessWidget {
           ), // Dark grey dialog background
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            side: BorderSide(color: greenColor.withOpacity(0.5), width: 1),
+            side: BorderSide(color: greenColor.withValues(alpha: 0.5), width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),

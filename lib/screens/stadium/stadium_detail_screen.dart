@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/models/stadium_model.dart';
 import '../../core/providers/booking_provider.dart';
-import '../booking/my_bookings_screen.dart';
+import '../booking/booking_summary_screen.dart';
 
 class StadiumDetailScreen extends StatefulWidget {
   final String name;
@@ -88,8 +89,8 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -141,7 +142,7 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 5),
                         ),
@@ -157,7 +158,7 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: greenColor.withOpacity(0.8),
+                            color: greenColor.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -329,7 +330,7 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                       child: Padding(
                         padding: EdgeInsets.all(24.0),
                         child: CircularProgressIndicator(
-                          color: Color(0xFF4C8C18),
+                          color: AppColors.primary,
                         ),
                       ),
                     )
@@ -403,7 +404,7 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: canBook
-                          ? () async {
+                          ? () {
                               final stadium = StadiumModel(
                                 id: widget.stadiumId,
                                 name: widget.name,
@@ -417,69 +418,37 @@ class _StadiumDetailScreenState extends State<StadiumDetailScreen> {
                               final fromTime = _selectedSlot!['from']!;
                               final toTime = _selectedSlot!['to']!;
 
-                              final success = await bookingProvider
-                                  .createBooking(
-                                    stadium,
-                                    _selectedDate,
-                                    fromTime,
-                                    toTime,
-                                  );
-
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      success
-                                          ? '✅ Booking confirmed!'
-                                          : '❌ Booking failed. Please try again.',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    backgroundColor: success
-                                        ? greenColor
-                                        : Colors.red,
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BookingSummaryScreen(
+                                    stadium: stadium,
+                                    date: _selectedDate,
+                                    fromTime: fromTime,
+                                    toTime: toTime,
                                   ),
-                                );
-                                if (success) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const MyBookingsScreen(),
-                                    ),
-                                  );
-                                }
-                              }
+                                ),
+                              );
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: greenColor,
-                        disabledBackgroundColor: greenColor.withOpacity(0.4),
+                        disabledBackgroundColor: greenColor.withValues(alpha: 0.4),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: bookingProvider.isLoading
-                          ? const SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 3,
-                              ),
-                            )
-                          : Text(
-                              _selectedSlot == null
-                                  ? 'Select a slot to book'
-                                  : 'Book Now — ${_selectedSlot!['from']} to ${_selectedSlot!['to']}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                      child: Text(
+                        _selectedSlot == null
+                            ? 'Select a slot to book'
+                            : 'Book Now — ${_selectedSlot!['from']} to ${_selectedSlot!['to']}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   );
                 },

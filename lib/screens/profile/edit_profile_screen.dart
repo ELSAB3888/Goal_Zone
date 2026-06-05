@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_colors.dart';
 import '../../core/providers/auth_provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -30,8 +31,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
     return Scaffold(
       backgroundColor: darkBg,
@@ -68,7 +69,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         width: 100,
                         height: 100,
                         decoration: BoxDecoration(
-                          color: greenColor.withOpacity(0.2),
+                          color: greenColor.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                           border: Border.all(color: greenColor, width: 2),
                         ),
@@ -229,7 +230,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         prefixIcon: Icon(icon, color: Colors.white54),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: greenColor.withOpacity(0.5), width: 1),
+          borderSide: BorderSide(color: greenColor.withValues(alpha: 0.5), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),

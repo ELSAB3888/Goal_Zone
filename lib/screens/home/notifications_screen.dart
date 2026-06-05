@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final greenColor = const Color(0xFF4C8C18);
-    final darkBg = const Color(0xFF1E1E1E);
+    const greenColor = AppColors.primary;
+    const darkBg = AppColors.background;
 
-    // Sample data - This will be replaced by backend data later
     final List<Map<String, String>> notifications = [
       {
         'title': 'Booking Confirmed!',
@@ -76,7 +76,7 @@ class NotificationsScreen extends StatelessWidget {
                     color: const Color(0xFF2C2C2C),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: greenColor.withOpacity(0.2),
+                      color: greenColor.withValues(alpha: 0.2),
                       width: 1,
                     ),
                   ),
@@ -86,7 +86,7 @@ class NotificationsScreen extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: greenColor.withOpacity(0.1),
+                          color: greenColor.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
