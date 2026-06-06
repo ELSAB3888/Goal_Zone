@@ -39,8 +39,13 @@ class _CourtListScreenState extends State<CourtListScreen> {
 
     return Scaffold(
       backgroundColor: darkBg,
-      body: CustomScrollView(
-        slivers: [
+      body: RefreshIndicator(
+        color: AppColors.primary,
+        backgroundColor: AppColors.background,
+        onRefresh: () => stadiumProvider.fetchStadiums(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
           SliverAppBar(
             expandedHeight: 180.0,
             floating: false,
@@ -179,6 +184,7 @@ class _CourtListScreenState extends State<CourtListScreen> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

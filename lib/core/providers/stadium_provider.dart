@@ -20,13 +20,17 @@ class StadiumProvider with ChangeNotifier {
       if (response.statusCode == 200 && response.data['success']) {
         final List<dynamic> data = response.data['data'];
         _allStadiums = data.map((json) => StadiumModel.fromJson(json)).toList();
+      } else {
+        debugPrint('Fetch Stadiums API failed or status code != 200: ${response.statusCode}, data: ${response.data}');
       }
     } on DioException catch (e) {
-      debugPrint('Fetch Stadiums Error: ${e.message}');
+      debugPrint('Fetch Stadiums Dio Error: ${e.message}, response: ${e.response?.data}');
+    } catch (e, stack) {
+      debugPrint('Fetch Stadiums Unexpected Error: $e\n$stack');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
-
-    _isLoading = false;
-    notifyListeners();
   }
 
   List<StadiumModel> searchStadiums(String query, {String sport = 'All'}) {

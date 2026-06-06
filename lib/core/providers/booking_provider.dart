@@ -136,24 +136,39 @@ class BookingProvider extends ChangeNotifier {
   }
 
   // ─── Get Booking By ID ───────────────────────────────────────────────────────
-  /// GET /bookings/:id  — Returns full booking object including qrToken
+  /// GET /bookings/:id/ticket  — Returns full booking object including qrToken.
+  /// Returns null if the server returns an error (e.g. 500).
   Future<Map<String, dynamic>?> getBookingById(String bookingId) async {
     try {
       final response =
-          await _apiService.client.get('/bookings/$bookingId');
+          await _apiService.client.get('/bookings/$bookingId/ticket');
       if (response.statusCode == 200 && response.data['success'] == true) {
         return response.data['data'] as Map<String, dynamic>?;
       }
     } on DioException catch (e) {
-      debugPrint('Get Booking By ID Error: ${e.response?.data ?? e.message}');
+      debugPrint('Get Booking By ID Error: ${e.response?.statusCode} — ${e.response?.data ?? e.message}');
+      // 500 = server error; fall through and return null so caller can fallback
+    } catch (e) {
+      debugPrint('Get Booking By ID Unexpected Error: $e');
     }
     return null;
   }
 
   /// Fetches only the qrToken for a given booking ID from the API.
+  /// If the /ticket endpoint fails, falls back to using the bookingId itself
+  /// as the QR token (the Owner app can search by this ID).
   Future<String> getBookingQrToken(String bookingId) async {
-    final data = await getBookingById(bookingId);
-    return data?['qrToken']?.toString() ?? 'NO_QR';
+    try {
+      final data = await getBookingById(bookingId);
+      final token = data?['qrToken']?.toString();
+      if (token != null && token.isNotEmpty) return token;
+    } catch (e) {
+      debugPrint('getBookingQrToken error: $e');
+    }
+    // Fallback: use the booking ID directly as the QR payload.
+    // The Owner app's search-by-qr endpoint will match on this ID.
+    debugPrint('getBookingQrToken: using bookingId as fallback → $bookingId');
+    return bookingId;
   }
 
   // ─── Create Booking ──────────────────────────────────────────────────────────

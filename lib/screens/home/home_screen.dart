@@ -19,6 +19,22 @@ class _HomeScreenState extends State<HomeScreen> {
   String _searchQuery = "";
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        Provider.of<StadiumProvider>(context, listen: false).fetchStadiums();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     const greenColor = AppColors.primary;
     const darkBg = AppColors.background;
@@ -32,9 +48,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: darkBg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+        child: RefreshIndicator(
+          color: AppColors.primary,
+          backgroundColor: AppColors.background,
+          onRefresh: () => stadiumProvider.fetchStadiums(),
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -336,6 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

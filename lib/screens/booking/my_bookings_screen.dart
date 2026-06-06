@@ -745,7 +745,7 @@ class _QRDialogState extends State<_QRDialog> {
   Future<void> _fetchQrToken() async {
     try {
       final provider = Provider.of<BookingProvider>(context, listen: false);
-      // First check if we already have a valid qrToken locally
+      // 1. If we already have a real qrToken, use it directly
       if (widget.booking.qrCodeData.isNotEmpty &&
           widget.booking.qrCodeData != 'NO_QR') {
         if (mounted) {
@@ -756,24 +756,33 @@ class _QRDialogState extends State<_QRDialog> {
         }
         return;
       }
-      // Otherwise, fetch from API
+      // 2. Try fetching from /bookings/:id/ticket API
+      //    If that returns 500, getBookingQrToken now falls back to the booking ID.
       final token = await provider.getBookingQrToken(widget.booking.id);
       if (mounted) {
         setState(() {
-          _qrToken = token;
+          _qrToken = token; // Will be the qrToken or the booking ID as fallback
           _loading = false;
-          _error = token == 'NO_QR';
+          _error = token.isEmpty; // Only error if completely empty
         });
       }
     } catch (e) {
+      // Last resort: use booking ID as the QR payload
       if (mounted) {
+        final fallback = widget.booking.id;
         setState(() {
           _loading = false;
-          _error = true;
+          if (fallback.isNotEmpty) {
+            _qrToken = fallback;
+            _error = false;
+          } else {
+            _error = true;
+          }
         });
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

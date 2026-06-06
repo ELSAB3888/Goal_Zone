@@ -28,7 +28,7 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Payment methods: 0 = Credit Card, 1 = Instapay/Wallet, 2 = Cash
-  int _selectedPaymentMethod = 0;
+  int _selectedPaymentMethod = 2;
 
   // Credit Card Form Controllers
   final TextEditingController _cardNameController = TextEditingController();
@@ -370,20 +370,6 @@ class _BookingSummaryScreenState extends State<BookingSummaryScreen> {
   Widget _buildPaymentMethodOptions() {
     return Column(
       children: [
-        _buildPaymentOptionTile(
-          index: 0,
-          title: 'Credit / Debit Card',
-          subtitle: 'Visa, Mastercard',
-          icon: Icons.credit_card_outlined,
-        ),
-        const SizedBox(height: 12),
-        _buildPaymentOptionTile(
-          index: 1,
-          title: 'Instapay / Digital Wallet',
-          subtitle: 'Instant transfer & mobile wallets',
-          icon: Icons.account_balance_wallet_outlined,
-        ),
-        const SizedBox(height: 12),
         _buildPaymentOptionTile(
           index: 2,
           title: 'Pay at Stadium',
