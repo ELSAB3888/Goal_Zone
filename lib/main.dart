@@ -37,7 +37,6 @@ class SportsBookingApp extends StatelessWidget {
     ChangeNotifierProvider<StadiumProvider>(create: (_) => StadiumProvider()),
   ];
 
-  /// Theme معزول في ميثود منفصلة — قابل للاختبار والتعديل بسهولة
   static ThemeData _buildAppTheme() {
     return ThemeData(
       brightness: Brightness.dark,
